@@ -13,12 +13,14 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-def generate_modname_nunja(entry_point, module):
+def generate_modname_nunja(entry_point, module, fext):
 
     def modname_nunja_template(fragments):
         # Nunja explicitly requires requirejs-text for the dynamic
-        # loading of templates.
-        return 'text!' + modname_nunja_script(fragments)
+        # loading of templates.  Also by convention, the filename
+        # extension should be included as the modname is based for
+        # the "standard" AMD/JavaScript module naming construction.
+        return 'text!' + modname_nunja_script(fragments) + fext
 
     def modname_nunja_script(fragments):
         # Do note that in the main implementation, entry points with

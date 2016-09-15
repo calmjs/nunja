@@ -14,7 +14,7 @@ from calmjs.indexer import mapper
 
 from nunja.indexer import generate_modname_nunja
 
-TMPL_FN_EXT = '.jinja'
+TMPL_FN_EXT = '.nja'
 REQ_TMPL_NAME = 'template' + TMPL_FN_EXT
 ENTRY_POINT_NAME = 'nunja.mold'
 
@@ -36,7 +36,7 @@ class MoldRegistry(BaseModuleRegistry):
     Default registry implementation.
     """
 
-    def _init(self, default_prefix='_', *a, **kw):
+    def _init(self, default_prefix='_', fext=TMPL_FN_EXT, *a, **kw):
         """
         Arguments:
 
@@ -46,18 +46,20 @@ class MoldRegistry(BaseModuleRegistry):
 
         self.default_prefix = default_prefix
         self.molds = {}
+        self.fext = fext
         # Forcibly register the default one here as the core rendering
         # need this wrapper.
         # self.molds.update(DEFAULT_MOLDS)
 
     def _map_entry_point_module(self, entry_point, module):
+
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
-                entry_point, module)
+                entry_point, module, fext=self.fext)
         templates = mapper(
             module, modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_template,
-            fext=TMPL_FN_EXT,
+            fext=self.fext,
         )
         scripts = mapper(
             module, modpath=modpath_pkg_resources_entry_point,

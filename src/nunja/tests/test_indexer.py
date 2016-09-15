@@ -20,7 +20,7 @@ class IndexerTestCase(unittest.TestCase):
         from nunja import testing
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
-            entry_point, testing)
+            entry_point, testing, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.
         name = nunja_modpath(testing)
@@ -39,7 +39,7 @@ class IndexerTestCase(unittest.TestCase):
         module = ModuleType('example.package')
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
-            entry_point, module)
+            entry_point, module, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.  However a
         # **HUGE** difference is that the customized modpath function
@@ -56,7 +56,7 @@ class IndexerTestCase(unittest.TestCase):
 
         # Naturally, this applies for the rest of the functions.
 
-        self.assertEqual(name, 'text!example.package.mold/table/template')
+        self.assertEqual(name, 'text!example.package.mold/table/template.tmpl')
 
     def test_indexer_generate_modname_nunja_script(self):
         entry_point = EntryPoint.parse(
@@ -64,7 +64,7 @@ class IndexerTestCase(unittest.TestCase):
         module = ModuleType('example.package')
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
-            entry_point, module)
+            entry_point, module, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.
         name = nunja_script(
@@ -80,20 +80,20 @@ class IndexerTestCase(unittest.TestCase):
         module = ModuleType('example.package')
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
-            entry_point, module)
+            entry_point, module, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.
         name = nunja_template(
             ['example', 'package', 'table', 'template'])
 
-        self.assertEqual(name, 'text!example.mold/table/template')
+        self.assertEqual(name, 'text!example.mold/table/template.tmpl')
 
     def test_indexer_generate_modname_nunja_script_mismatch(self):
         entry_point = EntryPoint.parse('example.mold = example.package:mold')
         module = ModuleType('example.package')
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
-            entry_point, module)
+            entry_point, module, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.
         name = nunja_script(

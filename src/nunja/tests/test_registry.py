@@ -45,11 +45,11 @@ class MoldRegistryTestCase(unittest.TestCase):
             'nunja.testing.molds/include_by_name/index',
             'nunja.testing.molds/include_by_value/index',
             'nunja.testing.molds/itemlist/index',
-            'text!nunja.testing.molds/basic/template',
-            'text!nunja.testing.molds/include_by_name/empty',
-            'text!nunja.testing.molds/include_by_name/template',
-            'text!nunja.testing.molds/include_by_value/template',
-            'text!nunja.testing.molds/itemlist/template',
+            'text!nunja.testing.molds/basic/template.nja',
+            'text!nunja.testing.molds/include_by_name/empty.nja',
+            'text!nunja.testing.molds/include_by_name/template.nja',
+            'text!nunja.testing.molds/include_by_value/template.nja',
+            'text!nunja.testing.molds/itemlist/template.nja',
         ]
 
         self.assertEqual(sorted(records.keys()), keys)
