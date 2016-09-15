@@ -134,18 +134,29 @@ class MoldRegistryTestCase(unittest.TestCase):
     def test_registry_load_entry_point_missing_attrs(self):
         working_set = mocks.WorkingSet({
             'nunja.mold': [
-                'nunja.testing.molds = nunja.testing',
+                'nunja.testing.mold1 = nunja.testing',
+                'nunja.testing.mold2 = nunja:testing.mold',
             ]},
-            dist=Distribution(project_name='nunjatesting')
+            dist=Distribution(project_name='nunjatesting', version='0.0')
         )
 
         with pretty_logging(logger='nunja', stream=mocks.StringIO()) as stream:
             registry = MoldRegistry('nunja.mold', _working_set=working_set)
 
+        msg = stream.getvalue()
+        self.assertIn(
+            "entry_point 'nunja.testing.mold1 = nunja.testing' "
+            "from package 'nunjatesting 0.0' incompatible ",
+            msg,
+        )
+        self.assertIn(
+            "entry_point 'nunja.testing.mold2 = nunja:testing.mold' "
+            "from package 'nunjatesting 0.0' incompatible ",
+            msg,
+        )
+
         records = registry.get_records_for_package('nunjatesting')
         self.assertEqual(records, {})
-        self.assertIn('nunjatesting', stream.getvalue())
-        self.assertIn('incompatible', stream.getvalue())
 
 
 # TODO migrate crufty old bits to above
