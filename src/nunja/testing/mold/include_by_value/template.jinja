@@ -1,0 +1,6 @@
+<dl id="{{ list_id }}">
+{% for list_id, items in itemlists %}
+  <dt>{{ list_id }}</dt>
+  <dd>{% include list_template %}</dd>
+{%- endfor %}
+</dl>
