@@ -9,6 +9,7 @@ one is created for each entry_point and module combination.
 
 import pkg_resources
 from logging import getLogger
+REQUIREJS_TEXT_PREFIX = 'text!'
 
 logger = getLogger(__name__)
 
@@ -20,7 +21,7 @@ def generate_modname_nunja(entry_point, module, fext):
         # loading of templates.  Also by convention, the filename
         # extension should be included as the modname is based for
         # the "standard" AMD/JavaScript module naming construction.
-        return 'text!' + modname_nunja_script(fragments) + fext
+        return REQUIREJS_TEXT_PREFIX + modname_nunja_script(fragments) + fext
 
     def modname_nunja_script(fragments):
         # Do note that in the main implementation, entry points with

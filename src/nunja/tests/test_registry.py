@@ -9,6 +9,7 @@ from pkg_resources import Distribution
 
 import calmjs.registry
 
+from nunja.registry import _remap
 from nunja.registry import MoldRegistry
 from nunja.registry import DEFAULT_REGISTRY_NAME
 
@@ -17,6 +18,51 @@ from calmjs.utils import pretty_logging
 import nunja.testing
 
 basic_tmpl_str = '<span>{{ value }}</span>\n'
+
+
+class RegistryUtilsTestCase(unittest.TestCase):
+
+    def test_remap_basic(self):
+        values = {
+            'abc/123': 'this/is/abc',
+            'def/456': 'this/is/def',
+        }
+        locals_ = {
+            'item_map': values,
+            'item_keys': sorted(values.keys()),
+        }
+
+        # start with the "last" item.
+        related = {}
+        _remap(locals_, 'item', 'def', related)
+        self.assertEqual(related['def/456'], 'this/is/def')
+        _remap(locals_, 'item', 'abc', related)
+        self.assertEqual(related['abc/123'], 'this/is/abc')
+
+    def test_remap_skipping(self):
+        values = {
+            'abc/123': 'this/is/abc',
+            'def/456': 'this/is/def',
+            'def/432': 'this/is/def',
+            'def/932': 'this/is/def',
+            'ghi/234': 'this/is/ghi',
+            'jkl/234': 'this/is/jkl',
+        }
+        locals_ = {
+            'item_map': values,
+            'item_keys': sorted(values.keys()),
+        }
+
+        # start with the "last" item.
+        related = {}
+        _remap(locals_, 'item', 'ghi', related)
+        # the first key should be popped
+        self.assertNotIn('jkl/234', locals_['item_keys'])
+        self.assertEqual(related['ghi/234'], 'this/is/ghi')
+        _remap(locals_, 'item', 'def', related)
+        self.assertEqual(related['def/932'], 'this/is/def')
+        self.assertEqual(related['def/432'], 'this/is/def')
+        self.assertEqual(related['def/456'], 'this/is/def')
 
 
 class MoldRegistryTestCase(unittest.TestCase):
@@ -61,11 +107,29 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         self.assertIn('5 templates', stream.getvalue())
         self.assertIn('3 scripts', stream.getvalue())
+        self.assertIn('4 molds extracted', stream.getvalue())
 
-        # XXX TODO figure out how to represent these as molds
-        # 'nunja.testing.molds/include_by_name',
-        # 'nunja.testing.molds/include_by_value',
-        # 'nunja.testing.molds/itemlist',
+        # select directly by mold_id through get_record
+        self.assertEqual(
+            sorted(registry.get_record('nunja.testing.molds/basic').keys()),
+            ['text!nunja.testing.molds/basic/template.nja'],
+        )
+        self.assertEqual(
+            sorted(registry.get_record('nunja.testing.molds/itemlist').keys()),
+            [
+                'nunja.testing.molds/itemlist/index',
+                'text!nunja.testing.molds/itemlist/template.nja',
+            ],
+        )
+        self.assertEqual(
+            sorted(registry.get_record(
+                'nunja.testing.molds/include_by_name').keys()),
+            [
+                'nunja.testing.molds/include_by_name/index',
+                'text!nunja.testing.molds/include_by_name/empty.nja',
+                'text!nunja.testing.molds/include_by_name/template.nja',
+            ],
+        )
 
     def test_registry_load_entry_point_missing_attrs(self):
         working_set = mocks.WorkingSet({

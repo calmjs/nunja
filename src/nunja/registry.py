@@ -13,6 +13,7 @@ from calmjs.base import BaseModuleRegistry
 from calmjs.indexer import mapper
 
 from nunja.indexer import generate_modname_nunja
+from nunja.indexer import REQUIREJS_TEXT_PREFIX
 
 TMPL_FN_EXT = '.nja'
 REQ_TMPL_NAME = 'template' + TMPL_FN_EXT
@@ -29,6 +30,26 @@ DEFAULT_WRAPPER_NAME = '_core_/_default_wrapper_'
 
 logger = getLogger(__name__)
 _marker = object()
+
+
+def _remap(locals_, type_, mold_id, related):
+    # this only works on sorted list.
+    type_keys = type_ + '_keys'
+    type_map = type_ + '_map'
+
+    # pop all keys we don't care about
+    while locals_.get(type_keys):
+        if locals_.get(type_keys)[-1].startswith(mold_id):
+            break
+        locals_.get(type_keys).pop()
+
+    # start using our keys
+    while locals_.get(type_keys):
+        if locals_.get(type_keys)[-1].startswith(mold_id):
+            key = locals_[type_keys].pop()
+            related[key] = locals_.get(type_map).pop(key)
+        else:
+            break
 
 
 class MoldRegistry(BaseModuleRegistry):
@@ -65,12 +86,12 @@ class MoldRegistry(BaseModuleRegistry):
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
                 entry_point, module, fext=self.fext)
-        templates = mapper(
+        template_map = mapper(
             module, modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_template,
             fext=self.fext,
         )
-        scripts = mapper(
+        script_map = mapper(
             module, modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_script,
         )
@@ -78,12 +99,43 @@ class MoldRegistry(BaseModuleRegistry):
         logger.info(
             "entry_point '%s' from package '%s' provided "
             "%d templates and %d scripts.",
-            entry_point, entry_point.dist, len(templates), len(scripts),
+            entry_point, entry_point.dist, len(template_map), len(script_map),
         )
-        result = {}
-        result.update(templates)
-        result.update(scripts)
-        return {module.__name__: result}
+
+        # molds are effectively modules, so split them up as such.
+        # first derive all the keys and sort them for easier processing
+        template_keys = sorted(template_map.keys())
+        script_keys = sorted(script_map.keys())
+        # the generator expression containing all possible mold_ids that
+        # follow the nunja mold requirements (i.e. directory within the
+        # location specified by the entry point that that also contain a
+        # file named after the default template.
+        mold_ids = (
+            mold_id[:-len(REQ_TMPL_NAME) - 1] for mold_id in (
+                key[len(REQUIREJS_TEXT_PREFIX):] for key in list(
+                    reversed(template_keys))
+                if len(key.split('/')) == 3 and key.endswith(REQ_TMPL_NAME)
+            )
+        )
+        # the "discard" pile, where would-be molds that do not contain a
+        # default template will be dumped to - at the module level.
+        discard = {}
+        result = {module.__name__: discard}
+        script_key = template_key = ''
+
+        for mold_id in mold_ids:
+            related = result[mold_id] = {}
+            template_prefix = REQUIREJS_TEXT_PREFIX + mold_id
+            _remap(locals(), 'template', template_prefix, related)
+            _remap(locals(), 'script', mold_id, related)
+
+        # discard everything else.
+        discard.update(template_map)
+        discard.update(script_map)
+
+        logger.info("total of %d molds extracted", len(result) - 1)
+
+        return result
 
 
 # TODO migrate the rest of the crufty old bits to above.
