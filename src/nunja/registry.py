@@ -51,15 +51,17 @@ class MoldRegistry(BaseModuleRegistry):
         # self.molds.update(DEFAULT_MOLDS)
 
     def _map_entry_point_module(self, entry_point, module):
-        modname_nunja_template, modname_nunja_script = generate_modname_nunja(
-            entry_point, module)
+        (modname_nunja_template, modname_nunja_script,
+            modpath_pkg_resources_entry_point) = generate_modname_nunja(
+                entry_point, module)
         templates = mapper(
-            module, modpath='pkg_resources', globber='recursive',
-            modname=modname_nunja_template, fext=TMPL_FN_EXT,
+            module, modpath=modpath_pkg_resources_entry_point,
+            globber='recursive', modname=modname_nunja_template,
+            fext=TMPL_FN_EXT,
         )
         scripts = mapper(
-            module, modpath='pkg_resources', globber='recursive',
-            modname=modname_nunja_script,
+            module, modpath=modpath_pkg_resources_entry_point,
+            globber='recursive', modname=modname_nunja_script,
         )
         result = {}
         result.update(templates)
