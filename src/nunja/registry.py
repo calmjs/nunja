@@ -53,6 +53,15 @@ class MoldRegistry(BaseModuleRegistry):
 
     def _map_entry_point_module(self, entry_point, module):
 
+        if len(entry_point.attrs) != 1:
+            logger.warning(
+                "entry_point '%s' from package '%s' incompatible with "
+                "registry '%s'; a target dir must be provided after the "
+                "module.",
+                entry_point, entry_point.dist, self.registry_name,
+            )
+            return {}
+
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
                 entry_point, module, fext=self.fext)
@@ -64,6 +73,12 @@ class MoldRegistry(BaseModuleRegistry):
         scripts = mapper(
             module, modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_script,
+        )
+
+        logger.info(
+            "entry_point '%s' from package '%s' provided "
+            "%d templates and %d scripts.",
+            entry_point, entry_point.dist, len(templates), len(scripts),
         )
         result = {}
         result.update(templates)
