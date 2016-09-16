@@ -158,5 +158,19 @@ class MoldRegistryTestCase(unittest.TestCase):
         records = registry.get_records_for_package('nunjatesting')
         self.assertEqual(records, {})
 
+    def test_registry_mold_id_to_path(self):
+        working_set = mocks.WorkingSet({
+            'nunja.mold': [
+                'nunja.testing.mold = nunja.testing:mold',
+            ]},
+            dist=Distribution(project_name='nunjatesting')
+        )
+        # Test that the lookup works.
+        registry = MoldRegistry('nunja.mold', _working_set=working_set)
+        path = registry.mold_id_to_path('nunja.testing.mold/basic')
+        with open(join(path, 'template.nja'), 'r') as fd:
+            contents = fd.read()
+        self.assertEqual(contents, basic_tmpl_str)
+
 
 # TODO migrate crufty old bits to above

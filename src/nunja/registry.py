@@ -57,7 +57,9 @@ class MoldRegistry(BaseModuleRegistry):
     Default registry implementation.
     """
 
-    def _init(self, default_prefix='_', fext=TMPL_FN_EXT, *a, **kw):
+    def _init(
+            self, default_prefix='_',
+            fext=TMPL_FN_EXT, req_tmpl_name=REQ_TMPL_NAME, *a, **kw):
         """
         Arguments:
 
@@ -68,21 +70,12 @@ class MoldRegistry(BaseModuleRegistry):
         self.default_prefix = default_prefix
         self.molds = {}
         self.fext = fext
+        self.req_tmpl_name = req_tmpl_name
         # Forcibly register the default one here as the core rendering
         # need this wrapper.
         # self.molds.update(DEFAULT_MOLDS)
 
-    def _map_entry_point_module(self, entry_point, module):
-
-        if len(entry_point.attrs) != 1:
-            logger.warning(
-                "entry_point '%s' from package '%s' incompatible with "
-                "registry '%s'; a target dir must be provided after the "
-                "module.",
-                entry_point, entry_point.dist, self.registry_name,
-            )
-            return {}
-
+    def _generate_maps(self, entry_point, module):
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
                 entry_point, module, fext=self.fext)
@@ -102,21 +95,43 @@ class MoldRegistry(BaseModuleRegistry):
             entry_point, entry_point.dist, len(template_map), len(script_map),
         )
 
+        return template_map, script_map
+
+    def _generate_and_store_mold_id_map(self, template_map):
+        """
+        Not a pure generator expression as this has the side effect of
+        storing the resulting id and map it into a local dict.  Produces
+        a list of all valid mold_ids from the input template_keys.
+
+        Internal function; NOT meant to be used outside of this class.
+        """
+
+        name = self.req_tmpl_name
+        for key in sorted(template_map.keys(), reverse=True):
+            if len(key.split('/')) == 3 and key.endswith(name):
+                mold_id = key[len(REQUIREJS_TEXT_PREFIX):-len(name) - 1]
+                self.molds[mold_id] = template_map[key][:-len(name) - 1]
+                yield mold_id
+
+    def _map_entry_point_module(self, entry_point, module):
+        if len(entry_point.attrs) != 1:
+            logger.warning(
+                "entry_point '%s' from package '%s' incompatible with "
+                "registry '%s'; a target dir must be provided after the "
+                "module.",
+                entry_point, entry_point.dist, self.registry_name,
+            )
+            return {}
+
+        template_map, script_map = self._generate_maps(entry_point, module)
+
         # molds are effectively modules, so split them up as such.
         # first derive all the keys and sort them for easier processing
         template_keys = sorted(template_map.keys())
         script_keys = sorted(script_map.keys())
-        # the generator expression containing all possible mold_ids that
-        # follow the nunja mold requirements (i.e. directory within the
-        # location specified by the entry point that that also contain a
-        # file named after the default template.
-        mold_ids = (
-            mold_id[:-len(REQ_TMPL_NAME) - 1] for mold_id in (
-                key[len(REQUIREJS_TEXT_PREFIX):] for key in list(
-                    reversed(template_keys))
-                if len(key.split('/')) == 3 and key.endswith(REQ_TMPL_NAME)
-            )
-        )
+
+        mold_ids = self._generate_and_store_mold_id_map(template_map)
+
         # the "discard" pile, where would-be molds that do not contain a
         # default template will be dumped to - at the module level.
         discard = {}
@@ -136,6 +151,13 @@ class MoldRegistry(BaseModuleRegistry):
         logger.info("total of %d molds extracted", len(result) - 1)
 
         return result
+
+    def mold_id_to_path(self, mold_id, default=_marker):
+        """
+        Lookup the path of a mold identifier.
+        """
+
+        return self.molds.get(mold_id)
 
 
 # TODO migrate the rest of the crufty old bits to above.
