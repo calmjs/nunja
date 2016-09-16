@@ -3,14 +3,20 @@
 Pluggable registry system for the nunja framework
 """
 
-
+from errno import ENOENT
 from logging import getLogger
+from os.path import altsep
+from os.path import exists
+from os.path import join
+from os.path import pardir
+from os.path import sep
 
 # from .exc import FileNotFoundError
 # from .exc import TemplateNotFoundError
 
 from calmjs.base import BaseModuleRegistry
 from calmjs.indexer import mapper
+from calmjs.utils import raise_os_error
 
 from nunja.indexer import generate_modname_nunja
 from nunja.indexer import REQUIREJS_TEXT_PREFIX
@@ -157,7 +163,58 @@ class MoldRegistry(BaseModuleRegistry):
         Lookup the path of a mold identifier.
         """
 
-        return self.molds.get(mold_id)
+        def handle_default(debug_msg=None):
+            if debug_msg:
+                logger.debug('mold_id_to_path:' + debug_msg, mold_id)
+            if default is _marker:
+                raise KeyError(
+                    'Failed to lookup mold_id %s to a path' % mold_id)
+            return default
+
+        result = self.molds.get(mold_id)
+        if result:
+            return result
+
+        return handle_default(
+            'mold_id %s does not lead to a valid template.jinja')
+
+    def lookup_path(self, mold_id_path, default=_marker):
+        """
+        For the given mold_id_path, look up the mold_id and translate
+        that path to its filesystem equivalent.
+        """
+
+        fragments = mold_id_path.split('/')
+        mold_id = '/'.join(fragments[:2])
+        try:
+            subpath = []
+            for piece in fragments[2:]:
+                if (sep in piece or (altsep and altsep in piece) or
+                        piece == pardir):
+                    raise KeyError
+                elif piece and piece != '.':
+                    subpath.append(piece)
+            path = self.mold_id_to_path(mold_id)
+        except KeyError:
+            if default is _marker:
+                raise
+            return default
+
+        return join(path, *subpath)
+        # TODO Should a lookup_template be implemented?
+
+    def verify_path(self, mold_id_path):
+        """
+        Lookup and verify path.
+        """
+
+        try:
+            path = self.lookup_path(mold_id_path)
+            if not exists(path):
+                raise KeyError
+        except KeyError:
+            raise_os_error(ENOENT)
+        return path
 
 
 # TODO migrate the rest of the crufty old bits to above.

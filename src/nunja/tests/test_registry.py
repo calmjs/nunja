@@ -2,8 +2,10 @@ import unittest
 
 import json
 import sys
-from os.path import join
 from os.path import dirname
+from os.path import exists
+from os.path import join
+from os.path import sep
 from pkg_resources import EntryPoint
 from pkg_resources import Distribution
 
@@ -18,6 +20,11 @@ from calmjs.utils import pretty_logging
 import nunja.testing
 
 basic_tmpl_str = '<span>{{ value }}</span>\n'
+
+
+def to_os_sep_path(p):
+    # turn the given / separated path into an os specific path
+    return sep.join(p.split('/'))
 
 
 class RegistryUtilsTestCase(unittest.TestCase):
@@ -158,19 +165,91 @@ class MoldRegistryTestCase(unittest.TestCase):
         records = registry.get_records_for_package('nunjatesting')
         self.assertEqual(records, {})
 
-    def test_registry_mold_id_to_path(self):
-        working_set = mocks.WorkingSet({
-            'nunja.mold': [
-                'nunja.testing.mold = nunja.testing:mold',
-            ]},
+    def mk_test_registry(self, entry_points=None):
+        if entry_points is None:
+            entry_points = ['nunja.testing.mold = nunja.testing:mold']
+
+        working_set = mocks.WorkingSet(
+            {'nunja.mold': entry_points},
             dist=Distribution(project_name='nunjatesting')
         )
+        return MoldRegistry('nunja.mold', _working_set=working_set)
+
+    def test_registry_mold_id_to_path_registered_entry_point(self):
+        registry = self.mk_test_registry()
         # Test that the lookup works.
-        registry = MoldRegistry('nunja.mold', _working_set=working_set)
         path = registry.mold_id_to_path('nunja.testing.mold/basic')
         with open(join(path, 'template.nja'), 'r') as fd:
             contents = fd.read()
         self.assertEqual(contents, basic_tmpl_str)
+
+    def test_registry_mold_id_to_path_unregistered(self):
+        registry = self.mk_test_registry([])
+        with self.assertRaises(KeyError):
+            registry.mold_id_to_path('nunja.testing.mold/basic')
+
+        # default to None
+        self.assertIsNone(
+            registry.mold_id_to_path('nunja.testing.mold/basic', None))
+
+        # TODO expand this if this eventually support arbitrarily added
+        # entry points.
+
+    def test_registry_lookup_path_registered_found(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+        path1 = registry.lookup_path('ntm/itemlist/template.nja')
+
+        with open(join(path1), 'r') as fd:
+            contents = fd.readline()
+        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+
+        # no such path will still be returned
+        path2 = registry.lookup_path('ntm/itemlist/nosuchpath.nja')
+        self.assertTrue(path2.endswith('nosuchpath.nja'))
+        self.assertFalse(exists(path2))
+
+    def test_registry_lookup_path_registered_not_found(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+
+        with self.assertRaises(KeyError):
+            registry.lookup_path('ntm/nomold/nosuchpath.nja')
+
+        with self.assertRaises(KeyError):
+            registry.lookup_path('nothing_here')
+
+    def test_registry_lookup_block_parent_traversal(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+
+        # Parent traversal blocked.
+        with self.assertRaises(KeyError):
+            registry.lookup_path('ntm/itemlist/../itemlist/template.nja')
+
+        with self.assertRaises(KeyError):
+            registry.lookup_path('ntm/itemlist/../../../registry.py')
+
+        # single dots will be omitted.
+        path1 = registry.lookup_path('ntm/itemlist/./template.nja')
+        self.assertTrue(path1.endswith(to_os_sep_path(
+            'testing/mold/itemlist/template.nja')))
+
+    def test_registry_verify_path_registered(self):
+        registry = self.mk_test_registry()
+        path = registry.verify_path('nunja.testing.mold/itemlist/template.nja')
+        with open(join(path), 'r') as fd:
+            contents = fd.readline()
+        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+
+    def test_registry_verify_path_unregistered(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+        with self.assertRaises(OSError):
+            registry.verify_path('ntm/itemlist/nosuchpath.nja')
+
+    def test_registry_verify_traversal(self):
+        registry = self.mk_test_registry()
+        path = registry.verify_path('nunja.testing.mold/itemlist/template.nja')
+        with open(join(path), 'r') as fd:
+            contents = fd.readline()
+        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
 
 
 # TODO migrate crufty old bits to above
