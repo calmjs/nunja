@@ -4,7 +4,11 @@ from os.path import join
 from types import ModuleType
 from pkg_resources import EntryPoint
 
+from calmjs.utils import pretty_logging
+from calmjs.testing.mocks import StringIO
 from nunja.indexer import generate_modname_nunja
+
+from nunja import testing
 
 
 class IndexerTestCase(unittest.TestCase):
@@ -17,7 +21,6 @@ class IndexerTestCase(unittest.TestCase):
 
     def test_indexer_generate_modname_nunja_modpath_pkg_resources(self):
         entry_point = EntryPoint.parse('nunja.testing = nunja.testing:mold')
-        from nunja import testing
 
         nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
             entry_point, testing, fext='.tmpl')
@@ -72,10 +75,10 @@ class IndexerTestCase(unittest.TestCase):
 
         self.assertEqual(name, 'example.package.mold/table/index')
 
-    # mismatch tests are where the name defined is not similar to the
-    # actual module import name.
+    # altname tests are where the name defined is not similar to the
+    # actual module import name (alternative name)
 
-    def test_indexer_generate_modname_nunja_template_mismatch(self):
+    def test_indexer_generate_modname_nunja_template_altname(self):
         entry_point = EntryPoint.parse('example.mold = example.package:mold')
         module = ModuleType('example.package')
 
@@ -88,7 +91,7 @@ class IndexerTestCase(unittest.TestCase):
 
         self.assertEqual(name, 'text!example.mold/table/template.tmpl')
 
-    def test_indexer_generate_modname_nunja_script_mismatch(self):
+    def test_indexer_generate_modname_nunja_script_altname(self):
         entry_point = EntryPoint.parse('example.mold = example.package:mold')
         module = ModuleType('example.package')
 
@@ -100,3 +103,48 @@ class IndexerTestCase(unittest.TestCase):
             ['example', 'package', 'table', 'index'])
 
         self.assertEqual(name, 'example.mold/table/index')
+
+    def test_indexer_modpath_pkg_resources_entry_point_fail_import(self):
+        entry_point = EntryPoint.parse('example.mold = example.package:mold')
+        module = ModuleType('example.package')
+
+        nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
+            entry_point, module, fext='.tmpl')
+
+        with pretty_logging(logger='nunja', stream=StringIO()) as stream:
+            nunja_modpath(None)
+
+        msg = stream.getvalue()
+        self.assertIn("does not appear to be a valid module", msg)
+
+    def test_indexer_modpath_pkg_resources_entry_point_mismatch_module(self):
+        entry_point = EntryPoint.parse('example.mold = example.package1:mold')
+        module1 = ModuleType('example.package1')
+        module2 = ModuleType('example.package2')
+
+        nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
+            entry_point, module1, fext='.tmpl')
+
+        with pretty_logging(logger='nunja', stream=StringIO()) as stream:
+            nunja_modpath(module2)
+
+        msg = stream.getvalue()
+        self.assertIn(
+            "modpath function created for <module 'example.package1'", msg)
+        self.assertIn(
+            "got unexpected module <module 'example.package2'", msg)
+        self.assertIn(
+            "could not be located as a module", msg)
+
+    def test_indexer_modpath_pkg_resources_entry_point_not_import(self):
+        entry_point = EntryPoint.parse('nunjatest = nunja.testing:mold')
+
+        nunja_template, nunja_script, nunja_modpath = generate_modname_nunja(
+            entry_point, testing, fext='.tmpl')
+
+        with pretty_logging(logger='nunja', stream=StringIO()) as stream:
+            path = nunja_modpath(testing)
+
+        msg = stream.getvalue()
+        self.assertEqual(msg, '')
+        self.assertTrue(path[0].endswith(join('nunja', 'testing', 'mold')))
