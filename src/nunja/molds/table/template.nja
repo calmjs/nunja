@@ -1,0 +1,18 @@
+<table class="{{ css['table'] }}">
+  <thead>
+    <tr class="{{ css['table.thead.tr'] }}">
+    {% for id in active_columns -%}
+      <td>{{ column_map[id] }}</td>
+    {%- endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for datum in data -%}
+    <tr class="{{ css['table.tbody.tr'] }}">
+      {% for id in active_columns -%}
+        <td>{{ datum[id] }}</td>
+      {%- endfor %}
+    </tr>
+    {%- endfor %}
+  </tbody>
+</table>

@@ -24,15 +24,8 @@ from nunja.indexer import REQUIREJS_TEXT_PREFIX
 TMPL_FN_EXT = '.nja'
 REQ_TMPL_NAME = 'template' + TMPL_FN_EXT
 ENTRY_POINT_NAME = 'nunja.mold'
-
-# I supposed this can all be hardcoded, but eating ones dogfood can be
-# useful as a litmus test while this keeps the naming scheme consistent,
-# even if usage is a bit different.
-DEFAULT_REGISTRY_NAME = 'nunja.mold'
+DEFAULT_REGISTRY_NAME = ENTRY_POINT_NAME
 DEFAULT_WRAPPER_NAME = '_core_/_default_wrapper_'
-# DEFAULT_MOLDS = {
-#     DEFAULT_WRAPPER_NAME: join(dirname(__file__), DEFAULT_WRAPPER_NAME)
-# }
 
 logger = getLogger(__name__)
 _marker = object()
@@ -43,7 +36,7 @@ def _remap(locals_, type_, mold_id, related):
     type_keys = type_ + '_keys'
     type_map = type_ + '_map'
 
-    # pop all keys we don't care about
+    # these keys are assumed to be skipped as they are in the way.
     while locals_.get(type_keys):
         if locals_.get(type_keys)[-1].startswith(mold_id):
             break
@@ -65,7 +58,8 @@ class MoldRegistry(BaseModuleRegistry):
 
     def _init(
             self, default_prefix='_',
-            fext=TMPL_FN_EXT, req_tmpl_name=REQ_TMPL_NAME, *a, **kw):
+            fext=TMPL_FN_EXT, req_tmpl_name=REQ_TMPL_NAME,
+            text_prefix=REQUIREJS_TEXT_PREFIX, *a, **kw):
         """
         Arguments:
 
@@ -77,14 +71,13 @@ class MoldRegistry(BaseModuleRegistry):
         self.molds = {}
         self.fext = fext
         self.req_tmpl_name = req_tmpl_name
-        # Forcibly register the default one here as the core rendering
-        # need this wrapper.
-        # self.molds.update(DEFAULT_MOLDS)
+        self.text_prefix = text_prefix
 
     def _generate_maps(self, entry_point, module):
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
-                entry_point, module, fext=self.fext)
+                entry_point, module, fext=self.fext,
+                text_prefix=self.text_prefix)
         template_map = mapper(
             module, modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_template,
@@ -115,7 +108,7 @@ class MoldRegistry(BaseModuleRegistry):
         name = self.req_tmpl_name
         for key in sorted(template_map.keys(), reverse=True):
             if len(key.split('/')) == 3 and key.endswith(name):
-                mold_id = key[len(REQUIREJS_TEXT_PREFIX):-len(name) - 1]
+                mold_id = key[len(self.text_prefix):-len(name) - 1]
                 self.molds[mold_id] = template_map[key][:-len(name) - 1]
                 yield mold_id
 
@@ -164,8 +157,6 @@ class MoldRegistry(BaseModuleRegistry):
         """
 
         def handle_default(debug_msg=None):
-            if debug_msg:
-                logger.debug('mold_id_to_path:' + debug_msg, mold_id)
             if default is _marker:
                 raise KeyError(
                     'Failed to lookup mold_id %s to a path' % mold_id)
@@ -175,8 +166,7 @@ class MoldRegistry(BaseModuleRegistry):
         if result:
             return result
 
-        return handle_default(
-            'mold_id %s does not lead to a valid template.jinja')
+        return handle_default()
 
     def lookup_path(self, mold_id_path, default=_marker):
         """

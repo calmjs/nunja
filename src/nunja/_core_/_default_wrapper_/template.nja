@@ -1,0 +1,3 @@
+<{{ _wrapper_tag_ }} {{ _nunja_data_ | safe }}>
+{% include _template_ %}
+</{{ _wrapper_tag_ }}>

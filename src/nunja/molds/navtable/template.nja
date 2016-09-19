@@ -1,0 +1,22 @@
+<table class="{{ css['table'] }}">
+  <thead>
+    <tr class="{{ css['table.thead.tr'] }}">
+    {% for id in active_columns -%}
+      <td>{{ column_map[id] }}</td>
+    {%- endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for datum in data -%}
+    <tr class="{{ css['table.tbody.tr'] }}">
+      {% for id in active_columns -%}
+        {%- if id == active_columns[0] and datum['@id'] -%}
+          <td><a href="{{ datum['@id'] }}">{{ datum[id] }}</a></td>
+        {%- else -%}
+          <td>{{ datum[id] }}</td>
+        {%- endif -%}
+      {%- endfor %}
+    </tr>
+    {%- endfor %}
+  </tbody>
+</table>

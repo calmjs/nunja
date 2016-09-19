@@ -54,6 +54,10 @@ setup(
         'calmjs.registry': [
             'nunja.mold = nunja.registry:MoldRegistry',
         ],
+        'nunja.mold': [
+            '_core_ = nunja:_core_',
+            'nunja.molds = nunja:molds',
+        ],
     },
     test_suite="nunja.tests.make_suite",
 )
