@@ -73,6 +73,10 @@ class MoldRegistry(BaseModuleRegistry):
         self.req_tmpl_name = req_tmpl_name
         self.text_prefix = text_prefix
 
+    @classmethod
+    def create(cls, registry_name=DEFAULT_REGISTRY_NAME, *a, **kw):
+        return cls(registry_name=registry_name, *a, **kw)
+
     def _generate_maps(self, entry_point, module):
         (modname_nunja_template, modname_nunja_script,
             modpath_pkg_resources_entry_point) = generate_modname_nunja(
@@ -139,7 +143,7 @@ class MoldRegistry(BaseModuleRegistry):
 
         for mold_id in mold_ids:
             related = result[mold_id] = {}
-            template_prefix = REQUIREJS_TEXT_PREFIX + mold_id
+            template_prefix = self.text_prefix + mold_id
             _remap(locals(), 'template', template_prefix, related)
             _remap(locals(), 'script', mold_id, related)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 
 import json
@@ -17,7 +18,6 @@ from nunja.registry import DEFAULT_REGISTRY_NAME
 
 from calmjs.testing import mocks
 from calmjs.utils import pretty_logging
-import nunja.testing
 
 basic_tmpl_str = '<span>{{ value }}</span>\n'
 
@@ -173,7 +173,7 @@ class MoldRegistryTestCase(unittest.TestCase):
             {'nunja.mold': entry_points},
             dist=Distribution(project_name='nunjatesting')
         )
-        return MoldRegistry('nunja.mold', _working_set=working_set)
+        return MoldRegistry.create(_working_set=working_set)
 
     def test_registry_mold_id_to_path_registered_entry_point(self):
         registry = self.mk_test_registry()
@@ -216,6 +216,12 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             registry.lookup_path('nothing_here')
+
+    def test_registry_lookup_path_default(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+
+        result = registry.lookup_path('ntm/nomold/nosuchpath.nja', '<default>')
+        self.assertEqual(result, '<default>')
 
     def test_registry_lookup_block_parent_traversal(self):
         registry = self.mk_test_registry(['ntm = nunja.testing:mold'])

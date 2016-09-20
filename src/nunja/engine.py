@@ -7,6 +7,7 @@ from calmjs.registry import get
 from nunja.registry import REQ_TMPL_NAME
 from nunja.registry import DEFAULT_WRAPPER_NAME
 from nunja.registry import DEFAULT_REGISTRY_NAME
+from nunja.registry import MoldRegistry
 from nunja.loader import NunjaLoader
 
 
@@ -20,7 +21,7 @@ class Engine(object):
 
     def __init__(
             self,
-            registry_name=DEFAULT_REGISTRY_NAME,
+            registry=DEFAULT_REGISTRY_NAME,
             env=None,
             _wrapper_name=DEFAULT_WRAPPER_NAME,
             _required_template_name=REQ_TMPL_NAME,
@@ -34,7 +35,8 @@ class Engine(object):
         specialized implementations.
         """
 
-        self.registry = get(registry_name)
+        self.registry = (
+            registry if isinstance(registry, MoldRegistry) else get(registry))
         self.env = env if env else Environment(
             autoescape=True,
             loader=NunjaLoader(self.registry)
