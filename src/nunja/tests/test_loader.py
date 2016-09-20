@@ -51,3 +51,20 @@ class LoaderTestCase(unittest.TestCase):
 
         with self.assertRaises(TemplateNotFound):
             loader.get_source(None, 'tmp/mold/../bad.nja')
+
+    def test_dev_addition_template_existing_mold(self):
+        # Test that the support for late addition is enabled.
+        loader = NunjaLoader(self.registry)
+        new_nja = join(dirname(self.main_template), 'new.nja')
+
+        # Does not current exists
+        self.assertFalse(exists(new_nja))
+        with self.assertRaises(TemplateNotFound):
+            loader.get_source(None, 'tmp/mold/new.nja')
+
+        tmpl = '<span>static</span>'
+        with open(new_nja, 'w') as fd:
+            fd.write(tmpl)
+
+        src, p, checker = loader.get_source(None, 'tmp/mold/new.nja')
+        self.assertEqual(src, tmpl)

@@ -11,6 +11,8 @@ from os.path import join
 from os.path import pardir
 from os.path import sep
 
+from pkg_resources import resource_filename
+
 # from .exc import FileNotFoundError
 # from .exc import TemplateNotFoundError
 
@@ -59,7 +61,9 @@ class MoldRegistry(BaseModuleRegistry):
     def _init(
             self, default_prefix='_',
             fext=TMPL_FN_EXT, req_tmpl_name=REQ_TMPL_NAME,
-            text_prefix=REQUIREJS_TEXT_PREFIX, *a, **kw):
+            text_prefix=REQUIREJS_TEXT_PREFIX,
+            auto_reload=False,
+            *a, **kw):
         """
         Arguments:
 
@@ -69,9 +73,11 @@ class MoldRegistry(BaseModuleRegistry):
 
         self.default_prefix = default_prefix
         self.molds = {}
+        self.tracked_entry_points = {}
         self.fext = fext
         self.req_tmpl_name = req_tmpl_name
         self.text_prefix = text_prefix
+        self.auto_reload = auto_reload
 
     @classmethod
     def create(cls, registry_name=DEFAULT_REGISTRY_NAME, *a, **kw):
@@ -116,7 +122,7 @@ class MoldRegistry(BaseModuleRegistry):
                 self.molds[mold_id] = template_map[key][:-len(name) - 1]
                 yield mold_id
 
-    def _map_entry_point_module(self, entry_point, module):
+    def register_entry_point(self, entry_point):
         if len(entry_point.attrs) != 1:
             logger.warning(
                 "entry_point '%s' from package '%s' incompatible with "
@@ -124,8 +130,14 @@ class MoldRegistry(BaseModuleRegistry):
                 "module.",
                 entry_point, entry_point.dist, self.registry_name,
             )
-            return {}
+            return
 
+        if self.auto_reload:
+            self.tracked_entry_points[entry_point.name] = entry_point
+
+        return super(MoldRegistry, self).register_entry_point(entry_point)
+
+    def _map_entry_point_module(self, entry_point, module):
         template_map, script_map = self._generate_maps(entry_point, module)
 
         # molds are effectively modules, so split them up as such.
@@ -155,12 +167,17 @@ class MoldRegistry(BaseModuleRegistry):
 
         return result
 
+    def _entry_point_to_path(self, entry_point):
+        return resource_filename(entry_point.module_name, entry_point.attrs[0])
+
     def mold_id_to_path(self, mold_id, default=_marker):
         """
-        Lookup the path of a mold identifier.
+        Lookup the filesystem path of a mold identifier.
         """
 
         def handle_default(debug_msg=None):
+            if debug_msg:
+                logger.debug('mold_id_to_path:' + debug_msg, mold_id)
             if default is _marker:
                 raise KeyError(
                     'Failed to lookup mold_id %s to a path' % mold_id)
@@ -170,7 +187,19 @@ class MoldRegistry(BaseModuleRegistry):
         if result:
             return result
 
-        return handle_default()
+        if not self.tracked_entry_points:
+            return handle_default()
+
+        try:
+            prefix, mold_basename = mold_id.split('/')
+        except ValueError:
+            return handle_default(
+                'mold_id %s not found and not in standard format')
+
+        entry_point = self.tracked_entry_points.get(prefix)
+        if entry_point is None:
+            return handle_default()
+        return join(self._entry_point_to_path(entry_point), mold_basename)
 
     def lookup_path(self, mold_id_path, default=_marker):
         """

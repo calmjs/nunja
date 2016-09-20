@@ -3,6 +3,7 @@ import unittest
 
 import json
 import sys
+from os import mkdir
 from os.path import dirname
 from os.path import exists
 from os.path import join
@@ -12,12 +13,20 @@ from pkg_resources import Distribution
 
 import calmjs.registry
 
+from nunja import indexer
+from nunja import registry as nunja_registry
 from nunja.registry import _remap
 from nunja.registry import MoldRegistry
 from nunja.registry import DEFAULT_REGISTRY_NAME
 
 from calmjs.testing import mocks
+from calmjs.testing.utils import mkdtemp_singleton
 from calmjs.utils import pretty_logging
+
+from nunja.testing.mocks import setup_tmp_module
+from nunja.testing.mocks import setup_tmp_mold_templates
+from nunja.testing.mocks import setup_tmp_mold_templates_registry
+from nunja.testing.mocks import stub_mod_mock_resources_filename
 
 basic_tmpl_str = '<span>{{ value }}</span>\n'
 
@@ -256,6 +265,84 @@ class MoldRegistryTestCase(unittest.TestCase):
         with open(join(path), 'r') as fd:
             contents = fd.readline()
         self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+
+    def test_registry_autoreload_base_support(self):
+        module_map = {'tmp': mkdtemp_singleton(self)}
+        setup_tmp_module(self)
+        stub_mod_mock_resources_filename(self, indexer, module_map)
+
+        entry_points = ['tmp = tmp:mold']
+
+        working_set = mocks.WorkingSet(
+            {'nunja.mold': entry_points},
+            dist=Distribution(project_name='nunjatesting')
+        )
+
+        registry = MoldRegistry.create(
+            _working_set=working_set, auto_reload=False)
+        self.assertFalse(registry.tracked_entry_points)
+        with self.assertRaises(KeyError):
+            registry.mold_id_to_path('tmp/new_mold')
+
+        registry = MoldRegistry.create(
+            _working_set=working_set, auto_reload=True)
+        self.assertEqual(
+            str(registry.tracked_entry_points['tmp']), entry_points[0])
+
+    def test_registry_entry_point_to_path(self):
+        module_map = {'tmp': mkdtemp_singleton(self)}
+        stub_mod_mock_resources_filename(self, nunja_registry, module_map)
+
+        (working_set, main_template,
+            sub_template) = setup_tmp_mold_templates(self)
+        registry = MoldRegistry.create(
+            _working_set=working_set, auto_reload=True)
+
+        # poking internals to test internals
+        tmpdir = mkdtemp_singleton(self)
+        tmp_entry_point = registry.tracked_entry_points['tmp']
+        self.assertEqual(registry._entry_point_to_path(tmp_entry_point), join(
+            tmpdir, 'root'))
+
+        # Using the API quickly
+        self.assertEqual(registry.mold_id_to_path('tmp/mold'), join(
+            tmpdir, 'root', 'mold'))
+        self.assertEqual(registry.mold_id_to_path('tmp/new_mold'), join(
+            tmpdir, 'root', 'new_mold'))
+
+        with self.assertRaises(KeyError):
+            registry.mold_id_to_path('no_such_entry/point')
+
+        with self.assertRaises(KeyError):
+            registry.mold_id_to_path('mold_id_not_like_this')
+
+    def test_registry_dynamic_template_addition(self):
+        module_map = {'tmp': mkdtemp_singleton(self)}
+        stub_mod_mock_resources_filename(self, nunja_registry, module_map)
+        (working_set, main_template,
+            sub_template) = setup_tmp_mold_templates(self)
+        registry =  MoldRegistry.create(
+            _working_set=working_set, auto_reload=True)
+
+        path = registry.lookup_path('tmp/mold/template.nja')
+        self.assertEqual(main_template, path)
+
+        tmpdir = mkdtemp_singleton(self)
+        mold_root = join(tmpdir, 'root')
+        mold_base = join(mold_root, 'new_mold')
+        mkdir(mold_base)
+        path = registry.lookup_path('tmp/new_mold/template.nja')
+        new_tmpl = join(mold_base, 'template.nja')
+        self.assertEqual(path, new_tmpl)
+
+        with self.assertRaises(OSError):
+            registry.verify_path('tmp/new_mold/template.nja')
+
+        with open(new_tmpl, 'w') as fd:
+            fd.write('<div>New Template</div>')
+
+        self.assertEqual(
+            registry.verify_path('tmp/new_mold/template.nja'), new_tmpl)
 
 
 # TODO migrate crufty old bits to above
