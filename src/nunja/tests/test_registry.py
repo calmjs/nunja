@@ -118,7 +118,7 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         self.assertIn('5 templates', stream.getvalue())
         self.assertIn('3 scripts', stream.getvalue())
-        self.assertIn('4 molds extracted', stream.getvalue())
+        self.assertIn('generated 4 molds', stream.getvalue())
 
         # select directly by mold_id through get_record
         self.assertEqual(
@@ -168,6 +168,26 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         records = registry.get_records_for_package('nunjatesting')
         self.assertEqual(records, {})
+
+    def test_no_valid_file(self):
+        working_set = mocks.WorkingSet({
+            'nunja.mold': [
+                'nunja.testing.badmold = nunja.testing:badmolds',
+            ]},
+            dist=Distribution(project_name='nunjatesting', version='0.0')
+        )
+
+        with pretty_logging(logger='nunja', stream=mocks.StringIO()) as stream:
+            registry = MoldRegistry('nunja.mold', _working_set=working_set)
+
+        records = registry.get_records_for_package('nunjatesting')
+        keys = []
+
+        self.assertEqual(sorted(records.keys()), keys)
+
+        self.assertIn('0 templates', stream.getvalue())
+        self.assertIn('0 scripts', stream.getvalue())
+        self.assertIn('generated 0 molds', stream.getvalue())
 
     def mk_test_registry(self, entry_points=None):
         if entry_points is None:
@@ -338,6 +358,3 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         self.assertEqual(
             registry.verify_path('tmp/new_mold/template.nja'), new_tmpl)
-
-
-# TODO migrate crufty old bits to above

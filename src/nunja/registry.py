@@ -1,6 +1,33 @@
 # -*- coding: utf-8 -*-
 """
 Pluggable registry system for the nunja framework
+
+The registry system leverages on the one by calmjs, and is defined
+through the setuptools entry point system.  To include the molds
+provided by a given module or a directory, the proper entry points must
+be declared in its package.  For example::
+
+    [nunja.mold]
+    example.namespace.module = example.namespace:module
+    nunja.testmold = nunja.testing:mold
+
+In both examples, the ``module_name`` of the defined entry point will be
+imported to resolve the associated directory for which this module was
+defined in.  Then the first attribute will be joined with that directory
+and be associated with the name of the entry point, thus acting as the
+container (or prefix) for resolution of all the molds within.  The molds
+will be in directories one level deep and is separated from its prefix
+by the ``/`` character, as that is the natural path separator and thus
+the suffixes will match the basename of the immediate subdirectories.
+
+For example, given the identifier ``nunja.testmold/basic``, in the
+context of the mold registry the prefix ``nunja.testmold`` will be
+resolved to the directory and then the subdirectory named ``basic`` will
+then be used.  While any name can be used, packages should keep to names
+within their namespace, so for the case of ``nunja.testmold`` it really
+should be defined as ``nunja.testing.mold``.  Also, packages should not
+declare molds defined other package namespaces under this default
+``nunja.mold`` registry.
 """
 
 from errno import ENOENT
@@ -12,9 +39,6 @@ from os.path import pardir
 from os.path import sep
 
 from pkg_resources import resource_filename
-
-# from .exc import FileNotFoundError
-# from .exc import TemplateNotFoundError
 
 from calmjs.base import BaseModuleRegistry
 from calmjs.indexer import mapper
@@ -106,7 +130,7 @@ class MoldRegistry(BaseModuleRegistry):
 
         return template_map, script_map
 
-    def _generate_and_store_mold_id_map(self, template_map):
+    def _generate_and_store_mold_id_map(self, template_map, molds):
         """
         Not a pure generator expression as this has the side effect of
         storing the resulting id and map it into a local dict.  Produces
@@ -119,7 +143,7 @@ class MoldRegistry(BaseModuleRegistry):
         for key in sorted(template_map.keys(), reverse=True):
             if len(key.split('/')) == 3 and key.endswith(name):
                 mold_id = key[len(self.text_prefix):-len(name) - 1]
-                self.molds[mold_id] = template_map[key][:-len(name) - 1]
+                molds[mold_id] = template_map[key][:-len(name) - 1]
                 yield mold_id
 
     def register_entry_point(self, entry_point):
@@ -145,7 +169,8 @@ class MoldRegistry(BaseModuleRegistry):
         template_keys = sorted(template_map.keys())
         script_keys = sorted(script_map.keys())
 
-        mold_ids = self._generate_and_store_mold_id_map(template_map)
+        molds = {}
+        mold_ids = self._generate_and_store_mold_id_map(template_map, molds)
 
         # the "discard" pile, where would-be molds that do not contain a
         # default template will be dumped to - at the module level.
@@ -162,8 +187,12 @@ class MoldRegistry(BaseModuleRegistry):
         # discard everything else.
         discard.update(template_map)
         discard.update(script_map)
+        self.molds.update(molds)
 
-        logger.info("total of %d molds extracted", len(result) - 1)
+        logger.info(
+            "entry point '%s' from module '%s' generated %d molds",
+            entry_point, module.__name__, len(molds)
+        )
 
         return result
 
@@ -238,6 +267,3 @@ class MoldRegistry(BaseModuleRegistry):
         except KeyError:
             raise_os_error(ENOENT)
         return path
-
-
-# TODO migrate the rest of the crufty old bits to above.
