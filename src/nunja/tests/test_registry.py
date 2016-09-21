@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-import json
-import sys
 from os import mkdir
-from os.path import dirname
 from os.path import exists
 from os.path import join
 from os.path import sep
-from pkg_resources import EntryPoint
 from pkg_resources import Distribution
 
 import calmjs.registry
@@ -25,7 +21,6 @@ from calmjs.utils import pretty_logging
 
 from nunja.testing.mocks import setup_tmp_module
 from nunja.testing.mocks import setup_tmp_mold_templates
-from nunja.testing.mocks import setup_tmp_mold_templates_registry
 from nunja.testing.mocks import stub_mod_mock_resources_filename
 
 basic_tmpl_str = '<span>{{ value }}</span>\n'
@@ -321,7 +316,7 @@ class MoldRegistryTestCase(unittest.TestCase):
         stub_mod_mock_resources_filename(self, nunja_registry, module_map)
         (working_set, main_template,
             sub_template) = setup_tmp_mold_templates(self)
-        registry =  MoldRegistry.create(
+        registry = MoldRegistry.create(
             _working_set=working_set, auto_reload=True)
 
         path = registry.lookup_path('tmp/mold/template.nja')

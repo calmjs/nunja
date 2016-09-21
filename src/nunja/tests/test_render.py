@@ -7,7 +7,6 @@ from nunja.engine import Engine
 from nunja.registry import MoldRegistry
 
 from calmjs.testing import mocks
-import nunja.testing
 
 
 class BaseTestCase(unittest.TestCase):
@@ -49,7 +48,7 @@ class BaseTestCase(unittest.TestCase):
 
     def test_template_retrieval_not_found(self):
         with self.assertRaises(TemplateNotFound):
-            result = self.engine.load_template(
+            self.engine.load_template(
                 'nunja.testing.mold/basic/no_such_template.nja')
 
     def test_base_xss_handling(self):

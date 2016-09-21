@@ -33,5 +33,3 @@ class DummyTableData(object):
         }
 
         return results
-
-

@@ -87,5 +87,3 @@ class TestDummyTableData(unittest.TestCase):
             ],
             'css': {},
         })
-
-

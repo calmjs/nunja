@@ -16,8 +16,10 @@ class MockResourceManagerTestCase(unittest.TestCase):
 
         manager = mocks.MockResourceManager(module_map)
         self.assertEqual(manager.resource_filename('dummy.module', ''), p)
-        self.assertEqual(manager.resource_filename('dummy.module', 'dir'
-            ), join('tmp', 'somewhere', 'dir'))
+        self.assertEqual(
+            manager.resource_filename('dummy.module', 'dir'),
+            join('tmp', 'somewhere', 'dir'),
+        )
 
         with self.assertRaises(ImportError):
             manager.resource_filename('bad.module', '')
@@ -28,7 +30,10 @@ class MockResourceManagerTestCase(unittest.TestCase):
 
     def test_setup_restore(self):
         module = ModuleType('dummymodule')
-        resource_filename = lambda x: ''
+
+        def resource_filename(x):
+            """dummy"""
+
         module.resource_filename = resource_filename
         mocks.stub_mod_mock_resources_filename(self, module, {
             'dummy.module': 'dummy',

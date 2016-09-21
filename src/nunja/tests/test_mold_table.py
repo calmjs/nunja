@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from os.path import join
-from os.path import dirname
 
-import nunja
 from nunja.engine import Engine
 from nunja.testing import model
 
