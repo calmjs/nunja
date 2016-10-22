@@ -20,6 +20,7 @@ Programming Language :: Python :: 3.5
 package_json = {
     "dependencies": {
         "requirejs-text": "~2.0.12",
+        "nunjucks": ">2.4.0",
     },
 }
 
@@ -45,18 +46,35 @@ setup(
     namespace_packages=[],
     zip_safe=True,
     package_json=package_json,
+    calmjs_module_registry=['nunja.mold'],
     install_requires=[
         'Jinja2>=2.4',
         'calmjs.rjs',
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
+    extras_calmjs={
+        'node_modules': {
+            'nunjucks': 'nunjucks/browser/nunjucks.js',
+            'text': 'requirejs-text/text.js',
+        },
+    },
     entry_points={
         'calmjs.registry': [
             'nunja.mold = nunja.registry:MoldRegistry',
+            'nunja.mold.tests = nunja.registry:MoldRegistry',
+        ],
+        'calmjs.module': [
+            'nunja = nunja',
+        ],
+        'calmjs.module.tests': [
+            'nunja = nunja.tests',
         ],
         'nunja.mold': [
             '_core_ = nunja:_core_',
             'nunja.molds = nunja:molds',
+        ],
+        'nunja.mold.tests': [
+            'nunja.testing.mold = nunja.testing:mold',
         ],
     },
     test_suite="nunja.tests.make_suite",
