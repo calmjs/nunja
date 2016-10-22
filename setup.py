@@ -76,6 +76,9 @@ setup(
         'nunja.mold.tests': [
             'nunja.testing.mold = nunja.testing:mold',
         ],
+        'calmjs.toolchain.advice': [
+            'calmjs.rjs.toolchain:RJSToolchain = nunja.spec:rjs',
+        ],
     },
     test_suite="nunja.tests.make_suite",
 )
