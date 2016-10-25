@@ -1,7 +1,5 @@
 define([
     'nunja/core',
-    // Template has to be preloaded first to emulate its availability.
-    'text!nunja.molds/navtable/template.nja'
 ], function(core) {
     'use strict';
 

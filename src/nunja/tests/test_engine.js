@@ -1,17 +1,6 @@
 define([
     'nunjucks',
     'nunja/core',
-    // Templates has to be preloaded first to emulate its availability.
-    'text!nunja.testing.mold/basic/template.nja',
-    'text!nunja.testing.mold/itemlist/template.nja',
-    // also the itemlist entry point
-    'nunja.testing.mold/itemlist/index',
-    // the include_by_value mold.
-    'text!nunja.testing.mold/include_by_value/template.nja',
-    'nunja.testing.mold/include_by_value/index',
-    // the include_by_name mold.
-    'text!nunja.testing.mold/include_by_name/template.nja',
-    'nunja.testing.mold/include_by_name/index',
 ], function(nunjucks, core) {
     'use strict';
 
