@@ -1,7 +1,14 @@
 'use strict';
 
 var core = require('nunja/core');
+var nunjucks = require('nunjucks');
 window.mocha.setup('bdd');
+
+var it_req_compiler = (nunjucks.compiler.compile === undefined) ? it.skip : it;
+
+if (it_req_compiler === it.skip) {
+    console.log('skipping tests configured to require the built-in compiler');
+}
 
 describe('Engine template core rendering', function() {
     beforeEach(function() {
@@ -14,7 +21,7 @@ describe('Engine template core rendering', function() {
         document.body.innerHTML = "";
     });
 
-    it('Core engine renders the correct template', function() {
+    it_req_compiler('Core engine renders the correct template', function() {
         document.body.innerHTML = (
             '<div data-nunja="nunja.testing.mold/basic"></div>');
         this.engine.do_onload(document.body);
@@ -26,7 +33,7 @@ describe('Engine template core rendering', function() {
         expect(results).to.equal('<span>Hello User</span>\n');
     });
 
-    it('Core engine executes the correct template', function() {
+    it_req_compiler('Core engine executes the correct template', function() {
         document.body.innerHTML = (
             '<div data-nunja="nunja.testing.mold/basic"></div>');
         this.engine.do_onload(document.body);
@@ -57,7 +64,7 @@ describe('Engine main script loading and ui hooks', function() {
         this.clock.restore();
     });
 
-    it('Mold index entry point triggered', function() {
+    it_req_compiler('Mold index entry point triggered', function() {
         this.rootEl.innerHTML = (
             '<div data-nunja="nunja.testing.mold/itemlist"></div>'
         );
@@ -69,7 +76,7 @@ describe('Engine main script loading and ui hooks', function() {
         expect(element).to.equal(element.model.element);
     });
 
-    it('Basic in-place rendering', function() {
+    it_req_compiler('Basic in-place rendering', function() {
         // Note that this is manual, so formatting is different to
         // final result.
         this.rootEl.innerHTML = (
@@ -97,7 +104,7 @@ describe('Engine main script loading and ui hooks', function() {
 
     });
 
-    it('Pure JS in-place rendering', function() {
+    it_req_compiler('Pure JS in-place rendering', function() {
         // Server would have only provided just the skeleton tag
         this.rootEl.innerHTML = (
             '<div data-nunja="nunja.testing.mold/itemlist"></div>'
@@ -119,7 +126,8 @@ describe('Engine main script loading and ui hooks', function() {
         );
     });
 
-    it('Event hooking onto parent/siblings of nunja node', function() {
+    it_req_compiler(
+            'Event hooking onto parent/siblings of nunja node', function() {
         this.rootEl.innerHTML = (
             '<button class="reset">Reset</button>\n' +
             '<div data-nunja="nunja.testing.mold/itemlist">' +
@@ -139,7 +147,8 @@ describe('Engine main script loading and ui hooks', function() {
         );
     });
 
-    it('Event hooking and rehooking within nunja node', function() {
+    it_req_compiler(
+            'Event hooking and rehooking within nunja node', function() {
         this.rootEl.innerHTML = (
             '<button class="reset">Reset</button>\n' +
             '<div data-nunja="nunja.testing.mold/itemlist">' +
@@ -194,7 +203,7 @@ describe('Engine main script loading and ui hooks', function() {
 
     });
 
-    it('Mold isolation', function() {
+    it_req_compiler('Mold isolation', function() {
         // need to be sure the events as is do not cross-pollinate.
         this.rootEl.innerHTML = (
             '<div id="n1">\n' +
@@ -256,7 +265,7 @@ describe('Support of imported template by data', function() {
         this.clock.restore();
     });
 
-    it('Mold index entry point triggered', function() {
+    it_req_compiler('Mold index entry point triggered', function() {
         this.rootEl.innerHTML = (
             '<div data-nunja="nunja.testing.mold/' +
                              'include_by_value"></div>'
@@ -296,7 +305,7 @@ describe('Support of imported template by data', function() {
         // rendered results?
     });
 
-    it('Rendering via manual include in for loop', function() {
+    it_req_compiler('Rendering via manual include in for loop', function() {
         this.rootEl.innerHTML = (
             '<div data-nunja="nunja.testing.mold/' +
                              'include_by_value"></div>'
@@ -335,7 +344,7 @@ describe('Support of imported template by data', function() {
         );
     });
 
-    it('Rendering via named include in for loop', function() {
+    it_req_compiler('Rendering via named include in for loop', function() {
         this.rootEl.innerHTML = (
             '<div data-nunja="nunja.testing.mold/' +
                              'include_by_name"></div>'
