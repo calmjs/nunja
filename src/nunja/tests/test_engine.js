@@ -2,12 +2,20 @@
 
 var core = require('nunja/core');
 var nunjucks = require('nunjucks');
+
 window.mocha.setup('bdd');
 
-var it_req_compiler = (nunjucks.compiler.compile === undefined) ? it.skip : it;
+var it_req_compiler = (
+    (nunjucks.compiler.compile !== undefined) ||
+    (window.nunjucksPrecompiled && window.nunjucksPrecompiled[
+        'nunja.testing.mold/basic/template.nja'])) ? it : it.skip;
 
 if (it_req_compiler === it.skip) {
-    console.log('skipping tests configured to require the built-in compiler');
+    console.log(
+        'resources from the nunja.mold.tests registry unavailable for use: ' +
+        'the nunjucks compiler is unavailable or they are not available as ' +
+        'precompiled templates; tests will be skipped'
+    );
 }
 
 describe('Engine template core rendering', function() {
