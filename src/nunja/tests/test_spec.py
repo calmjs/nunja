@@ -45,12 +45,62 @@ class SpecTestCase(unittest.TestCase):
         spec = Spec(
             build_dir=build_dir,
             plugin_source_map={},
-            bundle_source_map={},
+            bundle_source_map={
+            },
             transpile_source_map={},
         )
 
         precompile_nunja(spec)
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
+        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+
+    def test_nunjucks(self):
+        nunjucks_path = join('node_modules', 'nunjucks', 'nunjucks.js'),
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={},
+            bundle_source_map={
+                'nunjucks': nunjucks_path,
+            },
+            transpile_source_map={},
+        )
+
+        precompile_nunja(spec)
+        self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
+        self.assertEqual(spec['bundle_source_map']['nunjucks'], nunjucks_path)
+
+    def test_nunjucks_slim(self):
+        nunjucks_path = join('node_modules', 'nunjucks', 'nunjucks.js')
+        nunjucks_slim = join('node_modules', 'nunjucks', 'nunjucks-slim.js')
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={},
+            bundle_source_map={
+                'nunjucks': nunjucks_path,
+            },
+            transpile_source_map={},
+        )
+
+        precompile_nunja(spec, slim=True)
+        self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
+        self.assertEqual(spec['bundle_source_map']['nunjucks'], nunjucks_slim)
+
+    def test_nunjucks_slim_empty(self):
+        nunjucks_path = 'empty:'
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={},
+            bundle_source_map={
+                'nunjucks': nunjucks_path,
+            },
+            transpile_source_map={},
+        )
+
+        precompile_nunja(spec, slim=True)
+        self.assertEqual(spec['bundle_source_map']['nunjucks'], 'empty:')
 
     @unittest.skipIf(which('npm') is None, 'npm not found.')
     def test_core_compiled(self):

@@ -47,7 +47,7 @@ def precompile_nunja(spec, slim=False):
     if slim:
         spec['plugin_source_map'] = filtered
         nunjucks_path = spec['bundle_source_map'].get('nunjucks')
-        if nunjucks_path:
+        if nunjucks_path and nunjucks_path != 'empty:':
             spec['bundle_source_map']['nunjucks'] = join(
                 dirname(nunjucks_path), 'nunjucks-slim.js')
 
