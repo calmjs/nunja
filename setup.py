@@ -45,6 +45,7 @@ setup(
     package_dir={'': 'src'},
     namespace_packages=[],
     zip_safe=True,
+    include_package_data=True,
     package_json=package_json,
     calmjs_module_registry=['nunja.mold'],
     install_requires=[
