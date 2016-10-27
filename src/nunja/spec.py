@@ -25,28 +25,34 @@ def precompile_nunja(spec, slim=False):
                 sorted(missing)))
 
     plugin_source_map = spec['plugin_source_map']
-    filtered = {}
-    script = []
+    require_stmt = 'var nunjucks = require("nunjucks");\n'
+    standard_source_map = {}
+    compiled = []
     for k, path in plugin_source_map.items():
         values = k.split('!', 2)[:2]
         if values[0] != 'text':
-            filtered[k] = path
+            standard_source_map[k] = path
             continue
         _, name = values
-        script.append(
-            'process.stdout.write(nunjucks.precompile(%s, {"name": %s}));'
-            % (json_dumps(path), json_dumps(name))
-        )
-    if script:
         stdout, stderr = node(
-            'var nunjucks = require("nunjucks");\n' + '\n'.join(script))
+            '%sprocess.stdout.write(nunjucks.precompile(%s, {"name": %s}));'
+            % (require_stmt, json_dumps(path), json_dumps(name))
+        )
+
+        if stderr:
+            logger.error("failed to precompile '%s'\n%s'", path, stderr)
+        else:
+            compiled.append(stdout)
+
+    if compiled:
         f = join(spec['build_dir'], '__nunja_precompiled__.js')
         with open(f, 'w') as fd:
-            fd.write(stdout)
+            for stdout in compiled:
+                fd.write(stdout)
         spec['transpile_source_map']['nunja/__precompiled_nunjucks__'] = f
 
     if slim:
-        spec['plugin_source_map'] = filtered
+        spec['plugin_source_map'] = standard_source_map
         nunjucks_path = spec['bundle_source_map'].get('nunjucks')
         if nunjucks_path and nunjucks_path != 'empty:':
             spec['bundle_source_map']['nunjucks'] = join(

@@ -8,16 +8,20 @@ from os.path import join
 from pkg_resources import resource_filename
 
 from calmjs.exc import AdviceAbort
+from calmjs.npm import Driver
 from calmjs.toolchain import Spec
 from calmjs.toolchain import BEFORE_COMPILE
-from calmjs.npm import npm_install
+from calmjs.utils import pretty_logging
 from calmjs.utils import which
 
 from nunja.spec import precompile_nunja
 from nunja.spec import rjs
 
+from calmjs.testing.mocks import StringIO
 from calmjs.testing.utils import mkdtemp
 from calmjs.testing.utils import remember_cwd
+from calmjs.testing.utils import rmtree
+from calmjs.testing.utils import setup_class_install_environment
 
 
 class SpecTestCase(unittest.TestCase):
@@ -102,12 +106,33 @@ class SpecTestCase(unittest.TestCase):
         precompile_nunja(spec, slim=True)
         self.assertEqual(spec['bundle_source_map']['nunjucks'], 'empty:')
 
-    @unittest.skipIf(which('npm') is None, 'npm not found.')
+
+@unittest.skipIf(which('npm') is None, 'npm not found.')
+class SpecIntegrationTestCase(unittest.TestCase):
+    """
+    Actually do some real template precompilation.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        # nosetest will still execute setUpClass, so the test condition
+        # will need to be checked here also.
+        if which('npm') is None:  # pragma: no cover
+            return
+        setup_class_install_environment(
+            cls, Driver, ['nunja'], production=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Ditto, as per above.
+        if which('npm') is None:  # pragma: no cover
+            return
+        rmtree(cls._cls_tmpdir)
+
     def test_core_compiled(self):
         remember_cwd(self)
-        tmpdir = mkdtemp(self)
-        chdir(tmpdir)
-        npm_install('nunja', production=True)
+        chdir(self._env_root)
+
         build_dir = mkdtemp(self)
         src_template = resource_filename('nunja', join(
             '_core_', '_default_wrapper_', 'template.nja'))
@@ -154,7 +179,13 @@ class SpecTestCase(unittest.TestCase):
             'text!_core_/_default_wrapper_/template.nja': src_template,
         })
 
-        # TODO split this test out to different function
+    def test_core_compiled_slim(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        src_template = resource_filename('nunja', join(
+            '_core_', '_default_wrapper_', 'template.nja'))
+        build_dir = mkdtemp(self)
+
         spec = Spec(
             build_dir=build_dir,
             plugin_source_map={
@@ -170,3 +201,71 @@ class SpecTestCase(unittest.TestCase):
         precompiled_path = join(build_dir, '__nunja_precompiled__.js')
         spec.handle(BEFORE_COMPILE)
         self.assertIn('slim', spec['bundle_source_map']['nunjucks'])
+
+    def test_core_compiled_slim_empty_case(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={},
+            transpile_source_map={},
+            bundle_source_map={},
+        )
+        rjs(spec, ('slim',))
+        spec.handle(BEFORE_COMPILE)
+        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+
+    def test_core_compiled_failure_bad_template(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        build_dir = mkdtemp(self)
+        src_dir = mkdtemp(self)
+        src_template = join(src_dir, 'template.nja')
+
+        with open(src_template, 'w') as fd:
+            fd.write('<p>Hello {%World%}</p>')
+
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={
+                'text!mold/dummy/template.nja': src_template,
+            },
+            transpile_source_map={},
+            bundle_source_map={},
+        )
+        build_dir = mkdtemp(self)
+        rjs(spec, ())
+
+        with pretty_logging('nunja', stream=StringIO()) as stream:
+            spec.handle(BEFORE_COMPILE)
+
+        err = stream.getvalue()
+        self.assertIn('ERROR', err)
+        self.assertIn('failed to precompile', err)
+        self.assertIn(
+            'Template render error: (mold/dummy/template.nja)', err)
+
+    def test_core_compiled_failure_missing_template(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        build_dir = mkdtemp(self)
+        src_template = join(build_dir, 'no_such_template.nja')
+
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={
+                'text!nunja/dummy/no_such_template.nja': src_template,
+            },
+            transpile_source_map={},
+            bundle_source_map={},
+        )
+        build_dir = mkdtemp(self)
+        rjs(spec, ('slim',))
+
+        with pretty_logging('nunja', stream=StringIO()) as stream:
+            spec.handle(BEFORE_COMPILE)
+
+        err = stream.getvalue()
+        self.assertIn('ERROR', err)
+        self.assertIn('failed to precompile', err)
