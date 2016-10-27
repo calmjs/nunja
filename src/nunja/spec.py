@@ -8,6 +8,7 @@ from calmjs.cli import node
 from calmjs.exc import AdviceAbort
 from calmjs.toolchain import BEFORE_COMPILE
 from calmjs.toolchain import BUILD_DIR
+from calmjs.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,8 @@ def precompile_nunja(spec, slim=False):
             continue
         _, name = values
         script.append(
-            'process.stdout.write(nunjucks.precompile("%s", {"name": "%s"}));'
-            % (path, name)
+            'process.stdout.write(nunjucks.precompile(%s, {"name": %s}));'
+            % (json_dumps(path), json_dumps(name))
         )
     if script:
         stdout, stderr = node(
