@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from os.path import join
-
 from jinja2 import Environment
 
 from calmjs.registry import get
@@ -9,6 +7,13 @@ from nunja.registry import DEFAULT_WRAPPER_NAME
 from nunja.registry import DEFAULT_REGISTRY_NAME
 from nunja.registry import MoldRegistry
 from nunja.loader import NunjaLoader
+
+
+def join(*p):
+    # the engine internally use standard path separator characters, the
+    # registry is responsible for resolving that to the underlying path
+    # on the actual filesystem.
+    return '/'.join(p)
 
 
 class Engine(object):
