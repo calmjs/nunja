@@ -11,6 +11,7 @@
 var _require = require;
 var PRECOMPILED_NUNJUCKS = 'nunja/__precompiled_nunjucks__';
 
+/* istanbul ignore next */
 try {
     var __core__ = _require('nunja/__core__');
 }
@@ -23,6 +24,7 @@ catch(e) {
 // and/or how should the default templates be included if the single
 // artifact method is to be fully supported.
 
+/* istanbul ignore next */
 try {
     _require(
         [PRECOMPILED_NUNJUCKS], function(){},

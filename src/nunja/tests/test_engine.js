@@ -5,11 +5,13 @@ var nunjucks = require('nunjucks');
 
 window.mocha.setup('bdd');
 
+/* istanbul ignore next */
 var it_req_compiler = (
     (nunjucks.compiler.compile !== undefined) ||
     (window.nunjucksPrecompiled && window.nunjucksPrecompiled[
         'nunja.testing.mold/basic/template.nja'])) ? it : it.skip;
 
+/* istanbul ignore next */
 if (it_req_compiler === it.skip) {
     console.log(
         'resources from the nunja.mold.tests registry unavailable for use: ' +
