@@ -20,7 +20,7 @@ Programming Language :: Python :: 3.5
 package_json = {
     "dependencies": {
         "requirejs-text": "~2.0.12",
-        "nunjucks": ">2.4.0",
+        "nunjucks": "~3.0.0",
     },
 }
 
