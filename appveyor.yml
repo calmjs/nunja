@@ -1,0 +1,36 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+      nodejs_version: "4.6"
+    - PYTHON: "C:\\Python33"
+      nodejs_version: "4.6"
+    - PYTHON: "C:\\Python34"
+      nodejs_version: "6.9"
+    - PYTHON: "C:\\Python35"
+      nodejs_version: "6.9"
+
+install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - ps: Install-Product node $env:nodejs_version
+  - pip install virtualenv
+  - virtualenv --clear venv
+  - "venv\\Scripts\\activate.bat"
+
+  - pip install coverage calmjs.dev
+  - python setup.py install
+
+  # doing the env in this directory to save build time/bandwidth
+  - calmjs npm --install nunja calmjs.dev -w -D
+  - "SET CALMJS_TEST_ENV=."
+
+test_script:
+  - coverage run setup.py test
+  - coverage report -m
+
+  # for the JS
+  - calmjs karma -c --cover-test rjs nunja
+
+artifacts:
+  - path: dist\*
+
+build: off

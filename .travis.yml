@@ -1,0 +1,98 @@
+sudo: false
+matrix:
+  allow_failures:
+    - os: osx
+    - python: 3.6-dev
+    - env: TRAVIS_NODE_VERSION=7
+  include:
+    - language: python
+      python: 2.7
+      env: TRAVIS_NODE_VERSION=0.12
+    - language: python
+      python: 3.3
+      env: TRAVIS_NODE_VERSION=4.6
+    - language: python
+      python: 3.4
+      env: TRAVIS_NODE_VERSION=4.6
+    - language: python
+      python: 3.5
+      env: TRAVIS_NODE_VERSION=6.9
+    - language: python
+      python: 3.6-dev
+      env: TRAVIS_NODE_VERSION=7
+    - language: python
+      python: pypy
+      env: TRAVIS_NODE_VERSION=0.12
+    - language: python
+      python: pypy3.3-5.2-alpha1
+      env: TRAVIS_NODE_VERSION=6.9
+    # test different versions of Node.js on osx
+    - language: node_js
+      node_js: 4.6
+      os: osx
+      env: TRAVIS_PYTHON_VERSION=3.4.5
+    - language: node_js
+      node_js: 6.9
+      os: osx
+      env: TRAVIS_PYTHON_VERSION=3.5.2
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update || brew update ;
+      brew install pyenv ;
+      brew outdated pyenv || brew upgrade pyenv ;
+      pyenv install $TRAVIS_PYTHON_VERSION ;
+      pyenv global $TRAVIS_PYTHON_VERSION ;
+      pyenv rehash ;
+      python -m pip install --user virtualenv ;
+      python -m virtualenv ~/.venv ;
+      source ~/.venv/bin/activate ;
+    else
+      rm -rf ~/.nvm ;
+      git clone https://github.com/creationix/nvm.git ~/.nvm ;
+      (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags` );
+      source ~/.nvm/nvm.sh ;
+      nvm install "$TRAVIS_NODE_VERSION" ;
+    fi
+  - node --version
+  - npm --version
+
+install:
+  - pip install nose coverage flake8
+  # install the required development dependencies as wheels first
+  - pip install calmjs.dev
+  - python setup.py develop
+
+  # doing the env in this directory to save build time/bandwidth, as the
+  # same environment will be used for both Python and JavaScript tests.
+  - calmjs npm --install nunja calmjs.dev -w -D
+  - export CALMJS_TEST_ENV=.
+script:
+  - flake8 setup.py src
+  - nosetests --with-coverage --cover-package=nunja --with-doctest
+
+  # generate bundle/tests
+  - mkdir manual
+  - calmjs karma -c --cover-test rjs nunja --build-dir=manual
+  - coverage report -m
+
+# Alternatively without nose
+#  - coverage run --include=src/* -m unittest nunja.tests.make_suite
+#  - coverage report -m
+after_success:
+  # only submit coverage when testing under linux.
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      pip install coveralls ;
+      cd manual ;
+      rvm default ;
+      gem install coveralls-lcov ;
+      coveralls-lcov -v -n ../coverage/coverage.lcov > ../coverage.json ;
+      cd .. ;
+      coveralls --merge=coverage.json ;
+    fi
+
+branches:
+  only:
+    - testing
+    - master
+    - 1.0.x
