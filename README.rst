@@ -39,6 +39,34 @@ Contribute
 - Source Code: https://github.com/calmjs/nunja
 
 
+Troubleshooting
+---------------
+
+Using ``--bundle-map-method=empty`` with the ``rjs`` tool will result in
+this error message
+
+.. code:: sh
+
+    $ calmjs rjs nunja --bundle-map-method=empty
+
+    Tracing dependencies for: /tmp/nunja/nunja.testing.js
+    Error: TypeError: Cannot read property 'normalize' of undefined
+        at Object.<anonymous> (/tmp/nunja/node_modules/requirejs/bin/r.js:1221:35)
+
+This is caused by the provided templates done through the ``text``
+plugin which is not being provided.  To work around this, either ensure
+the templates registries are NOT provided, or apply the optional advice
+nunja[slim] to precompile the template and not include the raw source
+template strings.  Alternatively, if the ``text`` module is to be made
+available through a different artifact bundle for a given deployment,
+the ``--empty`` flag may be employed to stub out the missing modules
+completely, i.e.:
+
+.. code:: sh
+
+    $ calmjs rjs --empty nunja --bundle-map-method=empty
+
+
 License
 -------
 
