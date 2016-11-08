@@ -196,11 +196,11 @@ class SpecIntegrationTestCase(unittest.TestCase):
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
             },
         )
-        build_dir = mkdtemp(self)
         rjs(spec, ('slim',))
         precompiled_path = join(build_dir, '__nunja_precompiled__.js')
         spec.handle(BEFORE_COMPILE)
         self.assertIn('slim', spec['bundle_source_map']['nunjucks'])
+        self.assertTrue(exists(precompiled_path))
 
     def test_core_compiled_slim_empty_case(self):
         remember_cwd(self)
