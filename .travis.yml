@@ -82,12 +82,20 @@ script:
 after_success:
   # only submit coverage when testing under linux.
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      pip install coveralls ;
-      cd manual ;
-      rvm default ;
-      gem install coveralls-lcov ;
-      coveralls-lcov -v -n ../coverage/coverage.lcov > ../coverage.json ;
-      cd .. ;
+      rvm default;
+      gem install coveralls-lcov;
+      export PROJ_DIR=`pwd`/;
+      export PATH=$PATH:`pwd`/node_modules/.bin;
+      npm install remap-istanbul;
+      pip install coveralls;
+      cd manual;
+      remap-istanbul -i ../coverage/coverage.json -t lcovonly -o remapped.lcov;
+      sed -i "s#SF:../#SF:#" remapped.lcov;
+      sed -i "s#SF:${PROJ_DIR}#SF:#" remapped.lcov;
+      cd ..;
+      echo "running coveralls-lcov conversion";
+      coveralls-lcov -v -n manual/remapped.lcov > coverage.json ;
+      echo "running coveralls with merge";
       coveralls --merge=coverage.json ;
     fi
 
