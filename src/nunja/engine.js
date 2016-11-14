@@ -4,6 +4,16 @@ var nunjucks = require('nunjucks');
 var registry = require('nunja/registry');
 var loader = require('nunja/loader');
 
+/* istanbul ignore next */
+try {
+    // The precompiled core is definitely required
+    var __core__ = require('nunja/__core__');
+}
+catch(e) {
+    console.log(
+        'precompiled core templates missing; performance hit may result');
+}
+
 var _registry = new registry.Registry();
 
 // Default environment that includes the nunja specific loader, and
