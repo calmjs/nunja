@@ -2,14 +2,25 @@ environment:
   matrix:
     - PYTHON: "C:\\Python27"
       nodejs_version: "4.6"
+      BROWSER: "PhantomJS"
     - PYTHON: "C:\\Python33"
       nodejs_version: "4.6"
+      BROWSER: "Firefox"
     - PYTHON: "C:\\Python34"
       nodejs_version: "6.9"
+      BROWSER: "PhantomJS"
     - PYTHON: "C:\\Python35"
       nodejs_version: "6.9"
+      BROWSER: "Firefox"
+    - PYTHON: "C:\\Python35"
+      nodejs_version: "6.9"
+      BROWSER: "IE"
+matrix:
+  allow_failures:
+    - BROWSER: "IE"
 
 install:
+  - choco install firefox
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - ps: Install-Product node $env:nodejs_version
   - pip install virtualenv
@@ -21,6 +32,7 @@ install:
 
   # doing the env in this directory to save build time/bandwidth
   - calmjs npm --install nunja calmjs.dev -w -D
+  - npm install karma-ie-launcher
   - "SET CALMJS_TEST_ENV=."
 
 test_script:
@@ -28,7 +40,13 @@ test_script:
   - coverage report -m
 
   # for the JS
-  - calmjs karma -c --cover-test rjs nunja
+  - mkdir manual
+  # As the binary invocation from within calmjs in Windows fail to work,
+  # ignore errors here
+  - calmjs karma -I -c --cover-test --browser=%BROWSER% rjs nunja --build-dir=manual
+  # and do out of band testing directly with karma here with the
+  # generated configuration file.
+  - node_modules\.bin\karma start manual\karma.conf.js
 
 artifacts:
   - path: dist\*

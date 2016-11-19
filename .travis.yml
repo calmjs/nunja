@@ -7,34 +7,66 @@ matrix:
   include:
     - language: python
       python: 2.7
-      env: TRAVIS_NODE_VERSION=0.12
+      env:
+        - TRAVIS_NODE_VERSION=0.12
+        - BROWSER=PhantomJS
     - language: python
       python: 3.3
-      env: TRAVIS_NODE_VERSION=4.6
+      env:
+        - TRAVIS_NODE_VERSION=4.6
+        - BROWSER=Firefox
     - language: python
+      dist: trusty
       python: 3.4
-      env: TRAVIS_NODE_VERSION=4.6
+      env:
+        - TRAVIS_NODE_VERSION=4.6
+        - BROWSER=Chrome
+      addons:
+        apt:
+          sources:
+            - google-chrome
+          packages:
+            - google-chrome-stable
     - language: python
       python: 3.5
-      env: TRAVIS_NODE_VERSION=6.9
+      env:
+        - TRAVIS_NODE_VERSION=6.9
+        - BROWSER=PhantomJS
     - language: python
       python: 3.6-dev
-      env: TRAVIS_NODE_VERSION=7
+      env:
+        - TRAVIS_NODE_VERSION=7
+        - BROWSER=PhantomJS
     - language: python
       python: pypy
-      env: TRAVIS_NODE_VERSION=0.12
+      env:
+        - TRAVIS_NODE_VERSION=0.12
+        - BROWSER=Firefox
     - language: python
+      dist: trusty
       python: pypy3.3-5.2-alpha1
-      env: TRAVIS_NODE_VERSION=6.9
+      env:
+        - TRAVIS_NODE_VERSION=6.9
+        - BROWSER=Chrome
+      addons:
+        apt:
+          sources:
+            - google-chrome
+          packages:
+            - google-chrome-stable
     # test different versions of Node.js on osx
     - language: node_js
       node_js: 4.6
       os: osx
-      env: TRAVIS_PYTHON_VERSION=3.4.5
+      env:
+        - TRAVIS_PYTHON_VERSION=3.4.5
+        - BROWSER=PhantomJS
     - language: node_js
       node_js: 6.9
       os: osx
-      env: TRAVIS_PYTHON_VERSION=3.5.2
+      env:
+        - TRAVIS_PYTHON_VERSION=3.5.2
+        - BROWSER=Safari
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -48,6 +80,8 @@ before_install:
       python -m virtualenv ~/.venv ;
       source ~/.venv/bin/activate ;
     else
+      export DISPLAY=:99.0 ;
+      sh -e /etc/init.d/xvfb start ;
       rm -rf ~/.nvm ;
       git clone https://github.com/creationix/nvm.git ~/.nvm ;
       (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags` );
@@ -66,6 +100,10 @@ install:
   # doing the env in this directory to save build time/bandwidth, as the
   # same environment will be used for both Python and JavaScript tests.
   - calmjs npm --install nunja calmjs.dev -w -D
+  # out-of-band installation of platform specific dependencies
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      npm install karma-safari-launcher ;
+    fi
   - export CALMJS_TEST_ENV=.
 script:
   - flake8 setup.py src
@@ -73,7 +111,7 @@ script:
 
   # generate bundle/tests
   - mkdir manual
-  - calmjs karma -c --cover-test rjs nunja --build-dir=manual
+  - calmjs karma -c --cover-test --browser=$BROWSER rjs nunja --build-dir=manual
   - coverage report -m
 
 # Alternatively without nose
