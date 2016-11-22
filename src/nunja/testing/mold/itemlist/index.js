@@ -23,16 +23,16 @@ define([
     };
 
     Model.prototype.mkRemove = function (e) {
-        self = this;
+        var self = this;
         return function () {
             self.removeCount++;
-            e.remove();
+            e && e.parentNode && e.parentNode.removeChild(e);
         }
     }
 
     Model.prototype.hook = function () {
         // bound for later usage in forloop.
-        self = this;
+        var self = this;
         var ul = this.element.querySelector('[id]');
         this.id = ul ? ul.getAttribute('id') : '';
         var items = [];

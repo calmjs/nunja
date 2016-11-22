@@ -225,7 +225,8 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         with open(join(path1), 'r') as fd:
             contents = fd.readline()
-        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+        self.assertEqual(
+            contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
 
         # no such path will still be returned
         path2 = registry.lookup_path('ntm/itemlist/nosuchpath.nja')
@@ -267,7 +268,8 @@ class MoldRegistryTestCase(unittest.TestCase):
         path = registry.verify_path('nunja.testing.mold/itemlist/template.nja')
         with open(join(path), 'r') as fd:
             contents = fd.readline()
-        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+        self.assertEqual(
+            contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
 
     def test_registry_verify_path_unregistered(self):
         registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
@@ -279,7 +281,8 @@ class MoldRegistryTestCase(unittest.TestCase):
         path = registry.verify_path('nunja.testing.mold/itemlist/template.nja')
         with open(join(path), 'r') as fd:
             contents = fd.readline()
-        self.assertEqual(contents, '<ul id="{{ list_id }}">\n')
+        self.assertEqual(
+            contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
 
     def test_registry_autoreload_base_support(self):
         module_map = {'tmp': mkdtemp_singleton(self)}
