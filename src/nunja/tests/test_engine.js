@@ -129,7 +129,7 @@ describe('Engine main script loading and ui hooks', function() {
         this.rootEl.querySelector('div').model.render();
         expect(this.rootEl.innerHTML).to.equal(
             '<div data-nunja="nunja.testing.mold/itemlist">' +
-            '<ul id="">\n' +
+            '<ul>\n' +
             '\n' +
             '</ul>\n' +
             '</div>'
@@ -286,10 +286,11 @@ describe('Support of imported template by data', function() {
         this.rootEl.querySelector('div').model.itemlists = [
             ['list_1', ['Item 1', 'Item 2']],
         ];
-        this.rootEl.querySelector('div').model.render();
+        // providing 'sample' as id to allow IE not omit element
+        this.rootEl.querySelector('div').model.render('sample');
 
         expect(this.rootEl.querySelector('div').innerHTML).to.equal(
-            '<dl id="">\n' +
+            '<dl id="sample">\n' +
             '\n' +
             '  <dt>list_1</dt>\n' +
             '  <dd><ul id="list_1">\n' +

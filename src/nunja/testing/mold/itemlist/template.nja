@@ -1,4 +1,4 @@
-<ul id="{{ list_id }}">
+<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>
 {% for item in items %}
   <li>{{ item }}</li>
 {%- endfor %}
