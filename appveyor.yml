@@ -28,7 +28,7 @@ install:
   - "venv\\Scripts\\activate.bat"
 
   - pip install coverage calmjs.dev
-  - python setup.py install
+  - python setup.py develop
 
   # doing the env in this directory to save build time/bandwidth
   - calmjs npm --install nunja calmjs.dev -w -D
@@ -36,7 +36,7 @@ install:
   - "SET CALMJS_TEST_ENV=."
 
 test_script:
-  - coverage run setup.py test
+  - coverage run -m unittest nunja.tests.make_suite
   - coverage report -m
 
   # for the JS
