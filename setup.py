@@ -43,7 +43,7 @@ setup(
     license='GPL',
     packages=find_packages('src', exclude=['ez_setup']),
     package_dir={'': 'src'},
-    namespace_packages=[],
+    namespace_packages=['nunja'],
     zip_safe=True,
     include_package_data=True,
     package_json=package_json,

@@ -28,6 +28,7 @@ embedded inside Python packages.
 .. _Jinja2: http://jinja.pocoo.org/
 .. _Nunjucks: http://mozilla.github.io/nunjucks/
 .. |calmjs| replace:: ``calmjs``
+.. |nunja| replace:: ``nunja``
 .. _calmjs: https://pypi.python.org/pypi/calmjs
 
 
