@@ -44,7 +44,7 @@ setup(
     packages=find_packages('src', exclude=['ez_setup']),
     package_dir={'': 'src'},
     namespace_packages=['nunja'],
-    zip_safe=True,
+    zip_safe=False,
     include_package_data=True,
     package_json=package_json,
     calmjs_module_registry=['nunja.mold'],
