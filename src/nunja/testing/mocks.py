@@ -5,8 +5,10 @@ from os import utime
 from os.path import join
 from types import ModuleType
 
+import pkg_resources
 from pkg_resources import resource_filename
 from pkg_resources import Distribution
+from pkg_resources import Requirement
 
 from calmjs.testing.mocks import WorkingSet
 from calmjs.testing.utils import mkdtemp_singleton
@@ -62,8 +64,6 @@ def setup_tmp_mold_templates(testcase_inst):
     path to main_template and sub_template
     """
 
-    from nunja import indexer
-
     tempdir = mkdtemp_singleton(testcase_inst)
 
     # using nunja.testing as a surrogate module
@@ -76,11 +76,13 @@ def setup_tmp_mold_templates(testcase_inst):
     )
     module_map = {
         'tmp': tempdir,
+        # include this module, too
+        'nunja': resource_filename(Requirement.parse('nunja'), 'nunja'),
     }
     setup_tmp_module(testcase_inst)
 
     # Stub out the indexer so it would pick up our dummy files here
-    stub_mod_mock_resources_filename(testcase_inst, indexer, module_map)
+    stub_mod_mock_resources_filename(testcase_inst, pkg_resources, module_map)
 
     moldroot = join(tempdir, 'root')
     mkdir(moldroot)

@@ -7,8 +7,11 @@ This means the modname generator cannot be a static function, so instead
 one is created for each entry_point and module combination.
 """
 
-from pkg_resources import resource_filename
 from logging import getLogger
+from os.path import join
+
+from calmjs.indexer import resource_filename_mod_entry_point
+
 REQUIREJS_TEXT_PREFIX = 'text!'
 
 logger = getLogger(__name__)
@@ -35,12 +38,18 @@ def generate_modname_nunja(
         offset = len(base_module.__name__.split('.'))
         return '/'.join([entry_point.name] + fragments[offset:])
 
-    def modpath_pkg_resources_entry_point(module):
+    def modpath_pkg_resources_entry_point(module, entry_point_=None):
         """
         Goes through pkg_resources for compliance with various PEPs.
 
         This one accepts a module as argument.
         """
+
+        if entry_point != entry_point_:
+            logger.warning(
+                'modpath function created for %r got unexpected entrypoint %r',
+                entry_point, entry_point_,
+            )
 
         if module is not base_module:
             logger.warning(
@@ -56,7 +65,8 @@ def generate_modname_nunja(
             # before the base path (which is returned here) are to be
             # provided by the module name.  For more details refer to
             # tests.
-            return [resource_filename(module.__name__, entry_point.attrs[0])]
+            return [join(resource_filename_mod_entry_point(
+                module.__name__, entry_point), entry_point.attrs[0])]
         except ImportError:
             logger.warning("%r could not be located as a module", module)
         except Exception:

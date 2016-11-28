@@ -26,7 +26,7 @@ class IndexerTestCase(unittest.TestCase):
             entry_point, testing, fext='.tmpl')
         # the names provided will be the fragments based on actual file
         # name, with the final filename extension stripped.
-        name = nunja_modpath(testing)
+        name = nunja_modpath(testing, entry_point)
         self.assertEqual(len(name), 1)
         # make it easier to see wrong than just not True
         self.assertIn(join('nunja', 'testing', 'mold'), name[0])
@@ -112,10 +112,11 @@ class IndexerTestCase(unittest.TestCase):
             entry_point, module, fext='.tmpl')
 
         with pretty_logging(logger='nunja', stream=StringIO()) as stream:
-            nunja_modpath(None)
+            nunja_modpath(None, None)
 
         msg = stream.getvalue()
         self.assertIn("does not appear to be a valid module", msg)
+        self.assertIn("got unexpected entrypoint", msg)
 
     def test_indexer_modpath_pkg_resources_entry_point_mismatch_module(self):
         entry_point = EntryPoint.parse('example.mold = example.package1:mold')
@@ -126,7 +127,7 @@ class IndexerTestCase(unittest.TestCase):
             entry_point, module1, fext='.tmpl')
 
         with pretty_logging(logger='nunja', stream=StringIO()) as stream:
-            nunja_modpath(module2)
+            nunja_modpath(module2, entry_point)
 
         msg = stream.getvalue()
         self.assertIn(
@@ -143,7 +144,7 @@ class IndexerTestCase(unittest.TestCase):
             entry_point, testing, fext='.tmpl')
 
         with pretty_logging(logger='nunja', stream=StringIO()) as stream:
-            path = nunja_modpath(testing)
+            path = nunja_modpath(testing, entry_point)
 
         msg = stream.getvalue()
         self.assertEqual(msg, '')

@@ -38,10 +38,9 @@ from os.path import join
 from os.path import pardir
 from os.path import sep
 
-from pkg_resources import resource_filename
-
 from calmjs.base import BaseModuleRegistry
 from calmjs.indexer import mapper
+from calmjs.indexer import resource_filename_mod_entry_point
 from calmjs.utils import raise_os_error
 
 from nunja.indexer import generate_modname_nunja
@@ -113,12 +112,14 @@ class MoldRegistry(BaseModuleRegistry):
                 entry_point, module, fext=self.fext,
                 text_prefix=self.text_prefix)
         template_map = mapper(
-            module, modpath=modpath_pkg_resources_entry_point,
+            module, entry_point=entry_point,
+            modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_template,
             fext=self.fext,
         )
         script_map = mapper(
-            module, modpath=modpath_pkg_resources_entry_point,
+            module, entry_point=entry_point,
+            modpath=modpath_pkg_resources_entry_point,
             globber='recursive', modname=modname_nunja_script,
         )
 
@@ -197,7 +198,8 @@ class MoldRegistry(BaseModuleRegistry):
         return result
 
     def _entry_point_to_path(self, entry_point):
-        return resource_filename(entry_point.module_name, entry_point.attrs[0])
+        return join(resource_filename_mod_entry_point(
+            entry_point.module_name, entry_point), entry_point.attrs[0])
 
     def mold_id_to_path(self, mold_id, default=_marker):
         """

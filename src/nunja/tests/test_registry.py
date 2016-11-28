@@ -6,11 +6,10 @@ from os.path import exists
 from os.path import join
 from os.path import sep
 from pkg_resources import Distribution
+import pkg_resources
 
 import calmjs.registry
 
-from nunja import indexer
-from nunja import registry as nunja_registry
 from nunja.registry import _remap
 from nunja.registry import MoldRegistry
 from nunja.registry import DEFAULT_REGISTRY_NAME
@@ -285,9 +284,7 @@ class MoldRegistryTestCase(unittest.TestCase):
             contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
 
     def test_registry_autoreload_base_support(self):
-        module_map = {'tmp': mkdtemp_singleton(self)}
         setup_tmp_module(self)
-        stub_mod_mock_resources_filename(self, indexer, module_map)
 
         entry_points = ['tmp = tmp:mold']
 
@@ -309,7 +306,7 @@ class MoldRegistryTestCase(unittest.TestCase):
 
     def test_registry_entry_point_to_path(self):
         module_map = {'tmp': mkdtemp_singleton(self)}
-        stub_mod_mock_resources_filename(self, nunja_registry, module_map)
+        stub_mod_mock_resources_filename(self, pkg_resources, module_map)
 
         (working_set, main_template,
             sub_template) = setup_tmp_mold_templates(self)
@@ -336,7 +333,7 @@ class MoldRegistryTestCase(unittest.TestCase):
 
     def test_registry_dynamic_template_addition(self):
         module_map = {'tmp': mkdtemp_singleton(self)}
-        stub_mod_mock_resources_filename(self, nunja_registry, module_map)
+        stub_mod_mock_resources_filename(self, pkg_resources, module_map)
         (working_set, main_template,
             sub_template) = setup_tmp_mold_templates(self)
         registry = MoldRegistry.create(

@@ -1,12 +1,13 @@
 import unittest
 
-from pkg_resources import Distribution
+from pkg_resources import get_distribution
+from pkg_resources import WorkingSet
 from jinja2 import TemplateNotFound
 
 from nunja.engine import Engine
 from nunja.registry import MoldRegistry
 
-from calmjs.testing import mocks
+from calmjs.testing.utils import make_dummy_dist
 
 
 class BaseTestCase(unittest.TestCase):
@@ -16,13 +17,29 @@ class BaseTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        working_set = mocks.WorkingSet({
-            'nunja.mold': [
-                '_core_ = nunja:_core_',
-                'nunja.testing.mold = nunja.testing:mold',
-            ]},
-            dist=Distribution(project_name='nunja.testing')
-        )
+        # first create a dummy of this package; we need the actual
+        # version number
+        make_dummy_dist(self, ((
+            'namespace_packages.txt',
+            'nunja\n',
+        ), (
+            'entry_points.txt',
+            '[nunja.mold]\n'
+            '_core_ = nunja:_core_\n',
+        ),), 'nunja', get_distribution('nunja').version)
+
+        # then make the one for the testing molds
+        make_dummy_dist(self, ((
+            'namespace_packages.txt',
+            'nunja\n',
+        ), (
+            'entry_points.txt',
+            '[nunja.mold]\n'
+            'nunja.testing.mold = nunja.testing:mold',
+        ),), 'nunja.testing', '0.0.0.dummy')
+
+        working_set = WorkingSet([self._calmjs_testing_tmpdir])
+
         registry = MoldRegistry('nunja.mold', _working_set=working_set)
         self.engine = Engine(registry)
 

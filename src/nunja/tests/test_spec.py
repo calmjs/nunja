@@ -6,6 +6,7 @@ from os.path import exists
 from os.path import join
 
 from pkg_resources import resource_filename
+from pkg_resources import Requirement
 
 from calmjs.exc import AdviceAbort
 from calmjs.npm import Driver
@@ -134,8 +135,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
         chdir(self._env_root)
 
         build_dir = mkdtemp(self)
-        src_template = resource_filename('nunja', join(
-            '_core_', '_default_wrapper_', 'template.nja'))
+        src_template = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '_core_', '_default_wrapper_', 'template.nja'))
 
         spec = Spec(
             build_dir=build_dir,
@@ -161,7 +162,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
         with open(precompiled_path) as fd:
             precompiled = fd.read()
 
-        core_path = resource_filename('nunja', '__core__.js')
+        core_path = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '__core__.js'))
         with open(core_path) as fd:
             core_compiled = fd.read()
 
@@ -182,8 +184,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
     def test_core_compiled_slim(self):
         remember_cwd(self)
         chdir(self._env_root)
-        src_template = resource_filename('nunja', join(
-            '_core_', '_default_wrapper_', 'template.nja'))
+        src_template = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '_core_', '_default_wrapper_', 'template.nja'))
         build_dir = mkdtemp(self)
 
         spec = Spec(
