@@ -27,7 +27,7 @@ install:
   - virtualenv --clear venv
   - "venv\\Scripts\\activate.bat"
 
-  - pip install coverage calmjs.dev
+  - pip install coverage calmjs.dev calmjs.rjs
   - python setup.py develop
 
   # doing the env in this directory to save build time/bandwidth
