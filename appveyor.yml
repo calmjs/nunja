@@ -40,13 +40,7 @@ test_script:
   - coverage report -m
 
   # for the JS
-  - mkdir manual
-  # As the binary invocation from within calmjs in Windows fail to work,
-  # ignore errors here
-  - calmjs karma -I -c --cover-test --browser=%BROWSER% rjs nunja --build-dir=manual
-  # and do out of band testing directly with karma here with the
-  # generated configuration file.
-  - node_modules\.bin\karma start manual\karma.conf.js
+  - calmjs karma -c --cover-test --browser=%BROWSER% rjs nunja
 
 artifacts:
   - path: dist\*
