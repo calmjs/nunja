@@ -51,9 +51,14 @@ setup(
     install_requires=[
         'Jinja2>=2.4',
         'calmjs.rjs',
-        'calmjs>2.0.9999',
+        'calmjs>=2.1.0',
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
+    extras_require={
+        'dev': [
+            'calmjs.dev>=1.0.1,<2',
+        ],
+    },
     extras_calmjs={
         'node_modules': {
             'nunjucks': 'nunjucks/browser/nunjucks.js',
