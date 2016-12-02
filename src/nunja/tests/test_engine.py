@@ -5,8 +5,7 @@ from os import remove
 from jinja2 import TemplateNotFound
 
 from nunja.engine import Engine
-
-from nunja.testing.mocks import setup_tmp_mold_templates_registry
+from nunja.testing import mocks
 
 
 class EngineTestCase(unittest.TestCase):
@@ -17,7 +16,7 @@ class EngineTestCase(unittest.TestCase):
 
     def setUp(self):
         (registry, self.main_template,
-            self.sub_template) = setup_tmp_mold_templates_registry(self)
+            self.sub_template) = mocks.setup_tmp_mold_templates_registry(self)
         self.engine = Engine(registry)
 
     def test_unregistered_not_found(self):
@@ -49,3 +48,15 @@ class EngineTestCase(unittest.TestCase):
         with self.assertRaises(TemplateNotFound):
             # as that was removed
             template.render(data='Hello World!')
+
+    def test_fetch_path_basic(self):
+        tmpl = self.engine.fetch_path('tmp/mold/template.nja')
+        self.assertEqual('<div>{% include "tmp/mold/sub.nja" %}</div>', tmpl)
+
+    def test_fetch_path_itemlist(self):
+        registry = mocks.setup_testing_mold_templates_registry(self)
+        engine = Engine(registry)
+        tmpl = engine.fetch_path('nunja.testing.mold/itemlist/template.nja')
+        self.assertTrue(tmpl.startswith('<ul'))
+        script = engine.fetch_path('nunja.testing.mold/itemlist/index.js')
+        self.assertTrue(script.startswith('define(['))

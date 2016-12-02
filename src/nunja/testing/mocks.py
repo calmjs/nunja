@@ -12,6 +12,7 @@ from pkg_resources import Requirement
 
 from calmjs.testing.mocks import WorkingSet
 from calmjs.testing.utils import mkdtemp_singleton
+from calmjs.testing.utils import make_dummy_dist
 
 
 class MockResourceManager(object):
@@ -118,3 +119,33 @@ def setup_tmp_mold_templates_registry(testcase_inst):
 
     registry = MoldRegistry('nunja.mold', _working_set=working_set)
     return registry, main_template, sub_template
+
+
+def setup_testing_mold_templates_registry(testcase_inst):
+    from nunja.registry import MoldRegistry
+
+    # first create a dummy of this package; we need the actual
+    # version number
+    make_dummy_dist(testcase_inst, ((
+        'namespace_packages.txt',
+        'nunja\n',
+    ), (
+        'entry_points.txt',
+        '[nunja.mold]\n'
+        '_core_ = nunja:_core_\n',
+    ),), 'nunja', pkg_resources.get_distribution('nunja').version)
+
+    # then make the one for the testing molds
+    make_dummy_dist(testcase_inst, ((
+        'namespace_packages.txt',
+        'nunja\n',
+    ), (
+        'entry_points.txt',
+        '[nunja.mold]\n'
+        'nunja.testing.mold = nunja.testing:mold',
+    ),), 'nunja.testing', '0.0.0.dummy')
+
+    working_set = pkg_resources.WorkingSet([
+        testcase_inst._calmjs_testing_tmpdir])
+
+    return MoldRegistry('nunja.mold', _working_set=working_set)

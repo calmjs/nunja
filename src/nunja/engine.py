@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import codecs
+
 from jinja2 import Environment
 
 from calmjs.registry import get
@@ -57,6 +59,16 @@ class Engine(object):
         """
 
         return self.registry.verify_path(name)
+
+    def fetch_path(self, name):
+        """
+        Fetch contents from the path retrieved via lookup_path.
+
+        No caching will be done.
+        """
+
+        with codecs.open(self.lookup_path(name), encoding='utf-8') as fd:
+            return fd.read()
 
     def load_template(self, name):
         """
