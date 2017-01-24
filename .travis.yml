@@ -2,7 +2,8 @@ sudo: false
 matrix:
   allow_failures:
     - os: osx
-    - python: 3.6-dev
+    - python: 3.7-dev
+    - python: pypy3.3-5.2-alpha1
     - env: TRAVIS_NODE_VERSION=7
   include:
     - language: python
@@ -33,7 +34,12 @@ matrix:
         - TRAVIS_NODE_VERSION=6.9
         - BROWSER=PhantomJS
     - language: python
-      python: 3.6-dev
+      python: 3.6
+      env:
+        - TRAVIS_NODE_VERSION=7
+        - BROWSER=PhantomJS
+    - language: python
+      python: 3.7-dev
       env:
         - TRAVIS_NODE_VERSION=7
         - BROWSER=PhantomJS
