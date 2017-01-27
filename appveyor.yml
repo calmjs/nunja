@@ -12,8 +12,8 @@ environment:
     - PYTHON: "C:\\Python35"
       nodejs_version: "6.9"
       BROWSER: "Firefox"
-    - PYTHON: "C:\\Python35"
-      nodejs_version: "6.9"
+    - PYTHON: "C:\\Python36"
+      nodejs_version: "7.4"
       BROWSER: "IE"
 matrix:
   allow_failures:
