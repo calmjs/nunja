@@ -25,11 +25,11 @@ describe('Engine template core rendering', function() {
         this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
         this.olderror = require.onError;
-        //require.onError = function(err) {};
+        require.onError = function(err) {};
     });
 
     afterEach(function() {
-        //require.onError = this.olderror;
+        require.onError = this.olderror;
         this.clock.restore();
         document.body.innerHTML = "";
     });
@@ -50,10 +50,6 @@ describe('Engine template core rendering', function() {
     it_req_compiler('Core engine executes the correct template', function() {
         document.body.innerHTML = (
             '<div data-nunja="nunja.testing.mold/basic"></div>');
-        // XXX not doing this again because sometimes requirejs hits a
-        // race condition when trying to handle the error with its own
-        // error handler instead of the one specified in the code...
-        // this.engine.do_onload(document.body);
 
         this.clock.tick(500);
 
