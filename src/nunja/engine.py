@@ -80,6 +80,12 @@ class Engine(object):
     def load_mold(self, mold_id):
         """
         Load the default, required template from the mold `mold_id`.
+
+        This is useful to explicitly render something without being
+        wrapped by the helper div to avoid the automatic client-side
+        execution hooks.  Example:
+
+            engine.load_mold('nunja.molds/html5').render(title='Hello')
         """
 
         return self.load_template(join(mold_id, self._required_template_name))
@@ -91,7 +97,8 @@ class Engine(object):
         This is done using its default template, with data provided as
         dict.
 
-        This returns the wrapped content.
+        This returns the wrapped content, which contains the bits that
+        hook into automatic client-side on-load script triggers.
         """
 
         template = self.load_mold(mold_id)

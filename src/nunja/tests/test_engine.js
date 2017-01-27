@@ -24,9 +24,12 @@ describe('Engine template core rendering', function() {
     beforeEach(function() {
         this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
+        this.olderror = require.onError;
+        //require.onError = function(err) {};
     });
 
     afterEach(function() {
+        //require.onError = this.olderror;
         this.clock.restore();
         document.body.innerHTML = "";
     });
@@ -34,6 +37,7 @@ describe('Engine template core rendering', function() {
     it_req_compiler('Core engine renders the correct template', function() {
         document.body.innerHTML = (
             '<div data-nunja="nunja.testing.mold/basic"></div>');
+
         this.engine.do_onload(document.body);
 
         this.clock.tick(500);
@@ -46,7 +50,10 @@ describe('Engine template core rendering', function() {
     it_req_compiler('Core engine executes the correct template', function() {
         document.body.innerHTML = (
             '<div data-nunja="nunja.testing.mold/basic"></div>');
-        this.engine.do_onload(document.body);
+        // XXX not doing this again because sometimes requirejs hits a
+        // race condition when trying to handle the error with its own
+        // error handler instead of the one specified in the code...
+        // this.engine.do_onload(document.body);
 
         this.clock.tick(500);
 
@@ -56,6 +63,36 @@ describe('Engine template core rendering', function() {
             '<div data-nunja="nunja.testing.mold/basic">\n' +
             '<span>Hello User</span>\n\n</div>\n'
         )
+    });
+
+});
+
+
+describe('Engine main script loading error cases', function() {
+    beforeEach(function() {
+        this.clock = sinon.useFakeTimers();
+        this.engine = core.engine;
+    });
+
+    afterEach(function() {
+        this.clock.restore();
+        document.body.innerHTML = "";
+    });
+
+    it_req_compiler('An index.js not in AMD format', function() {
+        document.body.innerHTML = (
+            '<div data-nunja="nunja.testing.mold/problem"></div>'
+        );
+        this.engine.do_onload(document.body);
+        this.clock.tick(500);
+    });
+
+    it_req_compiler('An index.js AMD module without init', function() {
+        document.body.innerHTML = (
+            '<div data-nunja="nunja.testing.mold/noinit"></div>'
+        );
+        this.engine.do_onload(document.body);
+        this.clock.tick(500);
     });
 
 });

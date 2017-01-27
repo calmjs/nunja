@@ -106,18 +106,22 @@ class MoldRegistryTestCase(unittest.TestCase):
             'nunja.testing.molds/include_by_name/index',
             'nunja.testing.molds/include_by_value/index',
             'nunja.testing.molds/itemlist/index',
+            'nunja.testing.molds/noinit/index',
+            'nunja.testing.molds/problem/index',
             'text!nunja.testing.molds/basic/template.nja',
             'text!nunja.testing.molds/include_by_name/empty.nja',
             'text!nunja.testing.molds/include_by_name/template.nja',
             'text!nunja.testing.molds/include_by_value/template.nja',
             'text!nunja.testing.molds/itemlist/template.nja',
+            'text!nunja.testing.molds/noinit/template.nja',
+            'text!nunja.testing.molds/problem/template.nja',
         ]
 
         self.assertEqual(sorted(records.keys()), keys)
 
-        self.assertIn('5 templates', stream.getvalue())
-        self.assertIn('3 scripts', stream.getvalue())
-        self.assertIn('generated 4 molds', stream.getvalue())
+        self.assertIn('7 templates', stream.getvalue())
+        self.assertIn('5 scripts', stream.getvalue())
+        self.assertIn('generated 6 molds', stream.getvalue())
 
         # select directly by mold_id through get_record
         self.assertEqual(

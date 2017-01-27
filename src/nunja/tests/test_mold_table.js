@@ -5,7 +5,6 @@ window.mocha.setup('bdd');
 
 describe('Basic nunja.molds/table rendering', function() {
     beforeEach(function() {
-        this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
 
         // A barebone mock scaffold that should be enough to trigger
@@ -13,12 +12,9 @@ describe('Basic nunja.molds/table rendering', function() {
         // if it's not there already.
         document.body.innerHTML = (
             '<div data-nunja="nunja.molds/table"></div>');
-        this.engine.do_onload(document.body);
-        this.clock.tick(500);
     });
 
     afterEach(function() {
-        this.clock.restore();
         document.body.innerHTML = "";
     });
 

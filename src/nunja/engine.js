@@ -95,10 +95,11 @@ Engine.prototype.init_element = function(element) {
     */
     var mold_id = this.load_element(element);
     var entry_point = mold_id + '/index';
-    if (requirejs.defined(entry_point)) {
-        var main = require(entry_point);
-        main.init(element);
-    }
+    require([entry_point], function(main) {
+        if (main && main.init instanceof Function) {
+            main.init(element);
+        }
+    }, function(err) {});
 };
 
 Engine.prototype.do_onload = function (content) {
