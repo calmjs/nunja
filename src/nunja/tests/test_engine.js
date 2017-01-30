@@ -22,37 +22,19 @@ if (it_req_compiler === it.skip) {
 
 describe('Engine template core rendering', function() {
     beforeEach(function() {
-        this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
-        this.olderror = require.onError;
-        require.onError = function(err) {};
     });
 
     afterEach(function() {
-        require.onError = this.olderror;
-        this.clock.restore();
-        document.body.innerHTML = "";
     });
 
     it_req_compiler('Core engine renders the correct template', function() {
-        document.body.innerHTML = (
-            '<div data-nunja="nunja.testing.mold/basic"></div>');
-
-        this.engine.do_onload(document.body);
-
-        this.clock.tick(500);
-
         var results = this.engine.render(
             'nunja.testing.mold/basic', { value: 'Hello User' });
         expect(results).to.equal('<span>Hello User</span>\n');
     });
 
     it_req_compiler('Core engine executes the correct template', function() {
-        document.body.innerHTML = (
-            '<div data-nunja="nunja.testing.mold/basic"></div>');
-
-        this.clock.tick(500);
-
         var results = this.engine.execute(
             'nunja.testing.mold/basic', { value: 'Hello User' });
         expect(results).to.equal(

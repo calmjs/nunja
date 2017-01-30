@@ -99,7 +99,7 @@ Engine.prototype.init_element = function(element) {
         if (main && main.init instanceof Function) {
             main.init(element);
         }
-    }, function(err) {});
+    });
 };
 
 Engine.prototype.do_onload = function (content) {

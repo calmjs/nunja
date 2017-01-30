@@ -16,7 +16,14 @@ class BaseTestCase(unittest.TestCase):
         registry = mocks.setup_testing_mold_templates_registry(self)
         self.engine = Engine(registry)
 
-    def test_base_rendering(self):
+    def test_base_rendering_render(self):
+        result = self.engine.render(
+            'nunja.testing.mold/basic',
+            data={'value': 'Hello World!'})
+
+        self.assertEqual(result, '<span>Hello World!</span>')
+
+    def test_base_rendering_execute(self):
         result = self.engine.execute(
             'nunja.testing.mold/basic',
             data={'value': 'Hello World!'})

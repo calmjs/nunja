@@ -98,7 +98,9 @@ class Engine(object):
         dict.
 
         This returns the wrapped content, which contains the bits that
-        hook into automatic client-side on-load script triggers.
+        the client-side on-load script trigger will execute the index.js
+        defined for this mold; if this is not desired, simply call the
+        render method instead.
         """
 
         template = self.load_mold(mold_id)
@@ -110,3 +112,12 @@ class Engine(object):
         kwargs['_wrapper_tag_'] = wrapper_tag
 
         return self._core_template_.render(**kwargs)
+
+    def render(self, mold_id, data):
+        """
+        Render a mold `mold_id`.  No wrappers are applied as only the
+        default template defined for the mold is rendered.
+        """
+
+        template = self.load_mold(mold_id)
+        return template.render(**data)
