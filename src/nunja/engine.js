@@ -3,6 +3,9 @@
 var nunjucks = require('nunjucks');
 var registry = require('nunja/registry');
 var loader = require('nunja/loader');
+var utils = require('nunja/utils');
+
+var $ = utils.$;
 
 /* istanbul ignore next */
 try {
@@ -35,11 +38,6 @@ var default_kwargs = {
     'registry': _registry,
 };
 
-// Don't quite need all of jQuery but the selector.
-function $(selector, context) {
-    return (context || document).querySelectorAll(selector);
-}
-
 var Engine = function(kwargs) {
     for (var key in default_kwargs) {
         this[key] = kwargs[key] || default_kwargs[key];
@@ -55,8 +53,7 @@ Engine.prototype.scan = function (content) {
     /*
     Collates and returns all elements with data-nunja attributes.
     */
-    var elements = $('[data-nunja]');
-    return Array.prototype.slice.call(elements);
+    return $('[data-nunja]');
 };
 
 Engine.prototype.load_template = function (name) {
