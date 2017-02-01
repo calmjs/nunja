@@ -98,8 +98,9 @@ describe('nunja/engine test case', function() {
         this.engine.populate(element, {'msg': 'Hello World!'});
         this.clock.tick(500);
 
-        var text = $('div')[0].innerText;
-        expect(text).to.equal('nunja/engine populated: Hello World!');
+        var text = $('div')[0].innerHTML;
+        expect(text).to.equal(
+            '<span>nunja/engine populated: Hello World!</span>');
     });
 
 });
