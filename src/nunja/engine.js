@@ -135,10 +135,14 @@ Engine.prototype.execute = function (mold_id, data) {
 Engine.prototype.populate = function (element, data) {
     /*
     Populate the element that contains a data-nunja identifier
-    with the data involved.
+    with the data involved, asynchronously.
     */
     var mold_id = element.getAttribute('data-nunja');
-    element.innerHTML = this.render(mold_id, data)
+    // TODO figure out whether to split this dupe into function
+    var name = mold_id + '/' + this._required_template_name;
+    this.env.getTemplate(name, function(err, tmpl) {
+        element.innerHTML = tmpl.render(data)
+    });
 };
 
 Engine.prototype.render = function (mold_id, data) {

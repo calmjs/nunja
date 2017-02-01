@@ -1,5 +1,6 @@
 'use strict';
 
+var utils = require('nunja/utils');
 var registry = require('nunja/registry');
 var loader = require('nunja/loader');
 var engine = require('nunja/engine');
@@ -23,10 +24,21 @@ describe('nunja/engine test case', function() {
             }
         );
 
+        this.server.respondWith(
+            'GET', '/base/mock.molds/populate/template.nja',
+            function (xhr, id) {
+                xhr.respond(
+                    200, {'Content-Type': 'text/plain'},
+                    '<span>nunja/engine populated: {{ msg }}</span>'
+                );
+            }
+        );
+
         requirejs.config({
             'baseUrl': '/base',
             'paths': {
-                'mock.molds/engine': 'mock.molds/engine'
+                'mock.molds/engine': 'mock.molds/engine',
+                'mock.molds/populates': 'mock.molds/populates'
             }
         });
 
@@ -42,7 +54,11 @@ describe('nunja/engine test case', function() {
     });
 
     afterEach(function() {
+        // Yes, I know I can reuse them but being explicit makes the
+        // test less likely to give false positives.  Still, do the
+        // cleanups as it is best practice.
         requirejs.undef('text!mock.molds/engine/template.nja');
+        requirejs.undef('text!mock.molds/populates/template.nja');
         this.server.restore();
         this.clock.restore();
         document.body.innerHTML = "";
@@ -65,6 +81,25 @@ describe('nunja/engine test case', function() {
         // Just run it through render.
         var results = this.engine.render('mock.molds/engine', {'msg': 'hi!'});
         expect(results).to.equal('<span>nunja/engine says: hi!</span>');
+    });
+
+    it('test async populate', function() {
+        // Given that the rendering for client side interactions almost
+        // always require async to be responsive, the populate method
+        // can and should function without the explicit load_mold like
+        // above.
+
+        // First set the innerHTML to a dummy rendering
+        document.body.innerHTML = (
+            '<div data-nunja="mock.molds/populate"></div>'
+        );
+        this.clock.tick(500);
+        var element = $('div')[0];
+        this.engine.populate(element, {'msg': 'Hello World!'});
+        this.clock.tick(500);
+
+        var text = $('div')[0].innerText;
+        expect(text).to.equal('nunja/engine populated: Hello World!');
     });
 
 });
