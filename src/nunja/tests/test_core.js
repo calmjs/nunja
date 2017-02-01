@@ -20,6 +20,7 @@ if (it_req_compiler === it.skip) {
     );
 }
 
+
 describe('Engine template core rendering', function() {
     beforeEach(function() {
         this.engine = core.engine;

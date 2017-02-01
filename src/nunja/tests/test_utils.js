@@ -37,7 +37,7 @@ describe('nunja/utils test cases', function() {
     it('addEventListeners', function() {
         var target = $('[data-dummy="foo"]')[0];
         target.click();
-        expect(target.dummy).to.equal(undefined);
+        expect(target.dummy).to.be.undefined;
 
         addEventListeners($('[data-dummy]'), 'click', function(ev) {
             ev.target.dummy = 'set'
