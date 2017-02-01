@@ -5,9 +5,8 @@ var RequireJSLoader = function(registry, async) {
     // TODO figure out consequences of both these flags and best
     // settings for them.
 
-    // async is typically false because we assume requirejs has them
-    // already loaded in standard config
-    this.async = (async === true);
+    // async is always used to maximize usability and portability.
+    this.async = true;
 
     // this should trigger typical loading all the time under dev?
     this.noCache = true;
@@ -17,21 +16,20 @@ RequireJSLoader.prototype.getSource = function(name, callback) {
     var self = this;
     var template_path = self.registry.lookup_path(name);
 
-    if (this.async) {
-        require([template_path], function(template_str) {
-            callback(null, {
-                'src': template_str,
-                'path': name,
-                'noCache': self.noCache,
-            });
-        });
-    }
-    else {
-        return {
-            'src': require(template_path),
+    var process = function(template_str) {
+        callback(null, {
+            'src': template_str,
             'path': name,
             'noCache': self.noCache,
-        }
+        });
+    };
+
+    if (!require.defined(template_path)) {
+        require([template_path], process)
+    }
+    else {
+        // it's already loaded, call the callback directly.
+        process(require(template_path));
     }
 };
 
