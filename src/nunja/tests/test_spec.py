@@ -107,6 +107,25 @@ class SpecTestCase(unittest.TestCase):
         precompile_nunja(spec, slim=True)
         self.assertEqual(spec['bundle_source_map']['nunjucks'], 'empty:')
 
+    def test_stubbed_empty(self):
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_source_map={
+                'text!demo/template.nja': 'empty:',
+            },
+            bundle_source_map={
+            },
+            transpile_source_map={},
+        )
+
+        with pretty_logging('nunja', stream=StringIO()) as stream:
+            precompile_nunja(spec)
+
+        self.assertNotIn('failed', stream.getvalue())
+        self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
+        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+
 
 @unittest.skipIf(which('npm') is None, 'npm not found.')
 class SpecIntegrationTestCase(unittest.TestCase):

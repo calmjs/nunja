@@ -6,6 +6,7 @@ from os.path import dirname
 
 from calmjs.cli import node
 from calmjs.exc import AdviceAbort
+from calmjs.rjs.dist import EMPTY
 from calmjs.toolchain import BEFORE_COMPILE
 from calmjs.toolchain import BUILD_DIR
 from calmjs.utils import json_dumps
@@ -33,6 +34,8 @@ def precompile_nunja(spec, slim=False):
         if values[0] != 'text':
             standard_source_map[k] = path
             continue
+        if path == EMPTY:
+            continue
         _, name = values
         stdout, stderr = node(
             '%sprocess.stdout.write(nunjucks.precompile(%s, {"name": %s}));'
@@ -54,7 +57,7 @@ def precompile_nunja(spec, slim=False):
     if slim:
         spec['plugin_source_map'] = standard_source_map
         nunjucks_path = spec['bundle_source_map'].get('nunjucks')
-        if nunjucks_path and nunjucks_path != 'empty:':
+        if nunjucks_path and nunjucks_path != EMPTY:
             spec['bundle_source_map']['nunjucks'] = join(
                 dirname(nunjucks_path), 'nunjucks-slim.js')
 
