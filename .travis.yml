@@ -71,7 +71,13 @@ matrix:
       node_js: 6.9
       os: osx
       env:
-        - TRAVIS_PYTHON_VERSION=3.5.2
+        - TRAVIS_PYTHON_VERSION=3.5.3
+        - BROWSER=Safari
+    - language: node_js
+      node_js: 7.4
+      os: osx
+      env:
+        - TRAVIS_PYTHON_VERSION=3.6.0
         - BROWSER=Safari
 
 before_install:
