@@ -34,11 +34,32 @@ describe('nunja/engine test case', function() {
             }
         );
 
+        this.server.respondWith(
+            'GET', '/base/mock.molds/includes/template.nja',
+            function (xhr, id) {
+                xhr.respond(
+                    200, {'Content-Type': 'text/plain'},
+                    '<p>{% include "mock.molds/includes/embedded.nja" %}</p>'
+                );
+            }
+        );
+
+        this.server.respondWith(
+            'GET', '/base/mock.molds/includes/embedded.nja',
+            function (xhr, id) {
+                xhr.respond(
+                    200, {'Content-Type': 'text/plain'},
+                    '<span>This is second level embedded</span>'
+                );
+            }
+        );
+
         requirejs.config({
             'baseUrl': '/base',
             'paths': {
                 'mock.molds/engine': 'mock.molds/engine',
-                'mock.molds/populates': 'mock.molds/populates'
+                'mock.molds/populates': 'mock.molds/populates',
+                'mock.molds/includes': 'mock.molds/includes'
             }
         });
 
@@ -59,6 +80,8 @@ describe('nunja/engine test case', function() {
         // cleanups as it is best practice.
         requirejs.undef('text!mock.molds/engine/template.nja');
         requirejs.undef('text!mock.molds/populates/template.nja');
+        requirejs.undef('text!mock.molds/includes/template.nja');
+        requirejs.undef('text!mock.molds/includes/embedded.nja');
         this.server.restore();
         this.clock.restore();
         document.body.innerHTML = "";
@@ -101,6 +124,24 @@ describe('nunja/engine test case', function() {
         var text = $('div')[0].innerHTML;
         expect(text).to.equal(
             '<span>nunja/engine populated: Hello World!</span>');
+    });
+
+    it('test async include populate', function() {
+        // Same as above, but it includes another template that required
+        // to be loaded.
+
+        // First set the innerHTML to a dummy rendering
+        document.body.innerHTML = (
+            '<div data-nunja="mock.molds/includes"></div>'
+        );
+        this.clock.tick(500);
+        var element = $('div')[0];
+        this.engine.populate(element, {});
+        this.clock.tick(500);
+
+        var text = $('div')[0].innerHTML;
+        expect(text).to.equal(
+            '<p><span>This is second level embedded</span></p>');
     });
 
 });

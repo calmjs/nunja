@@ -132,7 +132,7 @@ Engine.prototype.execute = function (mold_id, data) {
     return results;
 };
 
-Engine.prototype.populate = function (element, data) {
+Engine.prototype.populate = function (element, data, cb) {
     /*
     Populate the element that contains a data-nunja identifier
     with the data involved, asynchronously.
@@ -141,7 +141,13 @@ Engine.prototype.populate = function (element, data) {
     // TODO figure out whether to split this dupe into function
     var name = mold_id + '/' + this._required_template_name;
     this.env.getTemplate(name, function(err, tmpl) {
-        element.innerHTML = tmpl.render(data)
+        tmpl.render(data, function(err, result) {
+            // TODO handle err if there is an error somewhere...
+            element.innerHTML = result;
+            if (cb instanceof Function) {
+                cb();
+            }
+        });
     });
 };
 

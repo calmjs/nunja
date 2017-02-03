@@ -118,6 +118,7 @@ describe('Engine main script loading and ui hooks', function() {
         // now invoke the assigned model to the element and trigger
         // the render
         this.rootEl.querySelector('div').model.render();
+        this.clock.tick(500);
         // should be different to what we assigned originally.
         expect(this.rootEl.innerHTML).to.equal(
             '<div data-nunja="nunja.testing.mold/itemlist">' +
@@ -143,6 +144,7 @@ describe('Engine main script loading and ui hooks', function() {
         // init, but here we trigger this manually to populate the
         // node with the empty list.
         this.rootEl.querySelector('div').model.render();
+        this.clock.tick(500);
         expect(this.rootEl.innerHTML).to.equal(
             '<div data-nunja="nunja.testing.mold/itemlist">' +
             '<ul>\n' +
@@ -166,6 +168,7 @@ describe('Engine main script loading and ui hooks', function() {
         this.rootEl.querySelector('div').model.items = [
             'Manual 1', 'Manual 2'];
         this.rootEl.querySelector('.reset').click();
+        this.clock.tick(500);
         expect(this.rootEl.querySelector('#sample').innerHTML).to.equal(
             '\n\n' +
             '  <li>Manual 1</li>\n' +
@@ -194,6 +197,7 @@ describe('Engine main script loading and ui hooks', function() {
         var model = this.rootEl.querySelector('div').model;
         // remove first item
         this.rootEl.querySelectorAll('#sample li')[2].click();
+        this.clock.tick(500);
         expect(this.rootEl.querySelector('#sample').innerHTML).to.equal(
             '\n' +
             '<li>Item 1</li>\n' +
@@ -206,6 +210,7 @@ describe('Engine main script loading and ui hooks', function() {
         expect(model.removeCount).to.equal(1);
 
         this.rootEl.querySelector('.reset').click();
+        this.clock.tick(500);
         // restored to 6 elements and reset count be 1.
         expect(model.resetCount).to.equal(1);
         expect(this.rootEl.querySelectorAll('#sample li').length).to.equal(
@@ -213,6 +218,7 @@ describe('Engine main script loading and ui hooks', function() {
 
         // event still hooked back into this re-rendered list.
         this.rootEl.querySelectorAll('#sample li')[4].click();
+        this.clock.tick(500);
         // rendering now derived from template not hardcoded values.
         expect(this.rootEl.querySelector('#sample').innerHTML).to.equal(
             '\n\n' +
@@ -257,12 +263,14 @@ describe('Engine main script loading and ui hooks', function() {
             'Resample 1', 'Resample 2'];
 
         this.rootEl.querySelector('#n1 .reset').click();
+        this.clock.tick(500);
         expect(this.rootEl.querySelector('#sample2').innerHTML).to.equal(
             '\n' +
             '  <li>Sample 2</li>\n'
         );
 
         this.rootEl.querySelector('#n2 .reset').click();
+        this.clock.tick(500);
         expect(this.rootEl.querySelector('#sample2').innerHTML).to.equal(
             '\n\n' +
             '  <li>Resample 1</li>\n' +
@@ -304,6 +312,7 @@ describe('Support of imported template by data', function() {
         ];
         // providing 'sample' as id to allow IE not omit element
         this.rootEl.querySelector('div').model.render('sample');
+        this.clock.tick(500);
 
         expect(this.rootEl.querySelector('div').innerHTML).to.equal(
             '<dl id="sample">\n' +
@@ -321,6 +330,7 @@ describe('Support of imported template by data', function() {
         // As this was basically rendered out of band, no init call
         // was made, so these events should be null
         this.rootEl.querySelector('li').click();
+        this.clock.tick(500);
         expect(this.rootEl.querySelectorAll('li').length).to.equal(2);
 
         // XXX
@@ -346,6 +356,7 @@ describe('Support of imported template by data', function() {
             ['list_3', ['Item 5', 'Item 6']],
         ];
         this.rootEl.querySelector('div').model.render('root_list');
+        this.clock.tick(500);
 
         expect(this.rootEl.querySelector('div').innerHTML).to.equal(
             '<dl id="root_list">\n\n' +
@@ -385,6 +396,7 @@ describe('Support of imported template by data', function() {
             ['list_3', ['Item 5', 'Item 6']],
         ];
         this.rootEl.querySelector('div').model.render('root_list');
+        this.clock.tick(500);
 
         expect(this.rootEl.querySelector('div').innerHTML).to.equal(
             '<dl id="root_list">\n\n' +

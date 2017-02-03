@@ -13,13 +13,15 @@ define([
     };
 
     Model.prototype.render = function () {
+        var self = this;
         // This one does not poke to a server, but just reorders the
         // list locally here derived from pre-rendered data.
         core.engine.populate(this.element, {
             'list_id': this.id,
             'items': this.items,
+        }, function() {
+            self.hook();
         });
-        this.hook();
     };
 
     Model.prototype.mkRemove = function (e) {
