@@ -19,9 +19,8 @@ define([
         core.engine.populate(this.element, {
             'list_id': this.id,
             'items': this.items,
-        }, function() {
-            self.hook();
         });
+        self.hook();
     };
 
     Model.prototype.mkRemove = function (e) {

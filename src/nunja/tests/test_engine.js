@@ -106,7 +106,7 @@ describe('nunja/engine test case', function() {
         expect(results).to.equal('<span>nunja/engine says: hi!</span>');
     });
 
-    it('test async populate', function() {
+    it('test async populate', function(done) {
         // Given that the rendering for client side interactions almost
         // always require async to be responsive, the populate method
         // can and should function without the explicit load_mold like
@@ -118,15 +118,16 @@ describe('nunja/engine test case', function() {
         );
         this.clock.tick(500);
         var element = $('div')[0];
-        this.engine.populate(element, {'msg': 'Hello World!'});
+        this.engine.populate(element, {'msg': 'Hello World!'}, function() {
+            var text = $('div')[0].innerHTML;
+            expect(text).to.equal(
+                '<span>nunja/engine populated: Hello World!</span>');
+            done();
+        });
         this.clock.tick(500);
-
-        var text = $('div')[0].innerHTML;
-        expect(text).to.equal(
-            '<span>nunja/engine populated: Hello World!</span>');
     });
 
-    it('test async include populate', function() {
+    it('test async include populate', function(done) {
         // Same as above, but it includes another template that required
         // to be loaded.
 
@@ -136,12 +137,13 @@ describe('nunja/engine test case', function() {
         );
         this.clock.tick(500);
         var element = $('div')[0];
-        this.engine.populate(element, {});
+        this.engine.populate(element, {}, function() {
+            var text = $('div')[0].innerHTML;
+            expect(text).to.equal(
+                '<p><span>This is second level embedded</span></p>');
+            done();
+        });
         this.clock.tick(500);
-
-        var text = $('div')[0].innerHTML;
-        expect(text).to.equal(
-            '<p><span>This is second level embedded</span></p>');
     });
 
 });
