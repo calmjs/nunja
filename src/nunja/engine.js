@@ -56,6 +56,21 @@ Engine.prototype.scan = function (content) {
     return $('[data-nunja]');
 };
 
+Engine.prototype.query_template = function (name) {
+    /*
+    Query for the template's loaded state.  Returns true if template can
+    be loaded synchronously, false if otherwise.
+    */
+
+    // Two places that the template can be loaded: either through the
+    // window.nunjucksPrecompiled or in the requirejs framework.
+
+    return (
+        (name in window.nunjucksPrecompiled) ||
+        requirejs.defined('text!' + name)
+    );
+};
+
 Engine.prototype.load_template = function (name) {
     /*
     Load the template identified by this name.
