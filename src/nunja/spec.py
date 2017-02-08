@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from os.path import join
+from codecs import encode
+from collections import defaultdict
 from os.path import dirname
+from os.path import join
 
 from calmjs.cli import node
 from calmjs.exc import AdviceAbort
@@ -11,7 +13,14 @@ from calmjs.toolchain import BEFORE_COMPILE
 from calmjs.toolchain import BUILD_DIR
 from calmjs.utils import json_dumps
 
+# TODO figure out where to stash this value
+NUNJA_PRECOMP_NS = '__nunja__'
+
 logger = logging.getLogger(__name__)
+
+
+def to_hex(s):
+    return encode(s.encode('utf8'), 'hex').decode('utf8')
 
 
 def precompile_nunja(spec, slim=False):
@@ -28,15 +37,26 @@ def precompile_nunja(spec, slim=False):
     plugin_source_map = spec['plugin_source_map']
     require_stmt = 'var nunjucks = require("nunjucks");\n'
     standard_source_map = {}
-    compiled = []
+    molds = defaultdict(list)
     for k, path in plugin_source_map.items():
+        # could express this more succinctly with regex, probably
         values = k.split('!', 2)[:2]
-        if values[0] != 'text':
-            standard_source_map[k] = path
-            continue
+        plugin, name = values
+        parts = name.split('/', 2)
         if path == EMPTY:
             continue
-        _, name = values
+        elif plugin != 'text' and not name.endswith('.nja'):
+            standard_source_map[k] = path
+            continue
+        elif len(parts) < 3:
+            # a template with an incompatible naming scheme
+            # TODO should warn about this?
+            standard_source_map[k] = path
+            continue
+
+        mold_id = '/'.join(parts[:2])
+
+        # start processing the name
         stdout, stderr = node(
             '%sprocess.stdout.write(nunjucks.precompile(%s, {"name": %s}));'
             % (require_stmt, json_dumps(path), json_dumps(name))
@@ -45,14 +65,22 @@ def precompile_nunja(spec, slim=False):
         if stderr:
             logger.error("failed to precompile '%s'\n%s'", path, stderr)
         else:
-            compiled.append(stdout)
+            molds[mold_id].append(stdout)
 
-    if compiled:
-        f = join(spec['build_dir'], '__nunja_precompiled__.js')
-        with open(f, 'w') as fd:
-            for stdout in compiled:
-                fd.write(stdout)
-        spec['transpile_source_map']['nunja/__precompiled_nunjucks__'] = f
+    if molds:
+        for mold_id, precompiled in molds.items():
+            # use a surrogate name as the bundle process in calmjs will
+            # copy that into the final location.
+            f = join(spec['build_dir'], to_hex(mold_id) + '.js')
+            with open(f, 'w') as fd:
+                for stdout in precompiled:
+                    fd.write(stdout)
+            modname = '/'.join([NUNJA_PRECOMP_NS, mold_id])
+            spec['bundle_source_map'][modname] = f
+            spec['shim'] = spec.get('shim', {})
+            spec['shim'][modname] = {
+                'exports': 'nunjucksPrecompiled'
+            }
 
     if slim:
         spec['plugin_source_map'] = standard_source_map

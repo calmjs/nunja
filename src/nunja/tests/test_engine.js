@@ -9,20 +9,56 @@ var nunjucks = require('nunjucks');
 window.mocha.setup('bdd');
 
 
-describe('nunja/engine test case', function() {
+describe('nunja/engine simple test case', function() {
+
     beforeEach(function() {
         this.clock = sinon.useFakeTimers();
+        this.registry = new registry.Registry();
+        this.loader = new loader.NunjaLoader(this.registry);
+        this.env = new nunjucks.Environment(this.loader, {
+            'autoescape': true,
+        });
+        this.engine = new engine.Engine({
+            'env': this.env,
+            'registry': this.registry,
+        });
+    });
+
+    afterEach(function() {
+        // Yes, I know I can reuse them but being explicit makes the
+        // test less likely to give false positives.  Still, do the
+        // cleanups as it is best practice.
+        delete window.nunjucksPrecompiled['check/template.nja'];
+        requirejs.undef('text!check/template.nja');
+        this.clock.restore();
+        document.body.innerHTML = "";
+    });
+
+    it('test query template requirejs', function() {
+        // Naturally, first verify that the template is not loaded
+        expect(this.engine.query_template('check/template.nja')).to.be.false;
+        define('text!check/template.nja', [], function () {
+            return 'dummy';
+        });
+        require(['text!check/template.nja'], function() {});
+        this.clock.tick(500);
+        expect(this.engine.query_template('check/template.nja')).to.be.true;
+    });
+
+    it('test query template precompiled', function() {
+        // Naturally, first verify that the template is not loaded
+        expect(this.engine.query_template('check/template.nja')).to.be.false;
+        window.nunjucksPrecompiled['check/template.nja'] = function() {};
+        expect(this.engine.query_template('check/template.nja')).to.be.true;
+    });
+});
+
+
+describe('nunja/engine async test case', function() {
+
+    beforeEach(function() {
         this.server = sinon.fakeServer.create();
         this.server.autoRespond = true;
-        this.server.respondWith(
-            'GET', '/base/mock.molds/engine/template.nja',
-            function (xhr, id) {
-                xhr.respond(
-                    200, {'Content-Type': 'text/plain'},
-                    '<span>nunja/engine says: {{ msg }}</span>'
-                );
-            }
-        );
 
         this.server.respondWith(
             'GET', '/base/mock.molds/populate/template.nja',
@@ -78,58 +114,11 @@ describe('nunja/engine test case', function() {
         // Yes, I know I can reuse them but being explicit makes the
         // test less likely to give false positives.  Still, do the
         // cleanups as it is best practice.
-        delete window.nunjucksPrecompiled['check/template.nja'];
-        requirejs.undef('text!check/template.nja');
-        requirejs.undef('text!mock.molds/engine/template.nja');
         requirejs.undef('text!mock.molds/populates/template.nja');
         requirejs.undef('text!mock.molds/includes/template.nja');
         requirejs.undef('text!mock.molds/includes/embedded.nja');
         this.server.restore();
-        this.clock.restore();
         document.body.innerHTML = "";
-    });
-
-    it('test query template requirejs', function() {
-        // Naturally, first verify that the template is not loaded
-        expect(this.engine.query_template('check/template.nja')).to.be.false;
-        define('text!check/template.nja', [], function () {
-            return 'dummy';
-        });
-        require(['text!check/template.nja'], function() {});
-        this.clock.tick(500);
-        expect(this.engine.query_template('check/template.nja')).to.be.true;
-    });
-
-    it('test query template precompiled', function() {
-        // Naturally, first verify that the template is not loaded
-        expect(this.engine.query_template('check/template.nja')).to.be.false;
-        window.nunjucksPrecompiled['check/template.nja'] = function() {};
-        expect(this.engine.query_template('check/template.nja')).to.be.true;
-    });
-
-    it('test async load and render', function() {
-        // Naturally, first verify that the template is not loaded
-        expect(this.engine.query_template(
-            'mock.molds/engine/template.nja')).to.be.false;
-        // Generally, the on_load handler should trigger the loading of
-        // all the required templates for the given page, so the null
-        // result should never happen unless the user interacts with the
-        // page before all the resources are loaded, which again should
-        // not be a problem if all resources are pre-compiled artifacts.
-        var initial = this.engine.load_mold('mock.molds/engine')
-        expect(initial).to.be.undefined;
-
-        this.clock.tick(500);
-
-        // as the clock has ticked, the resources should be loaded
-        expect(this.engine.query_template(
-            'mock.molds/engine/template.nja')).to.be.true;
-        var loaded = this.engine.load_mold('mock.molds/engine')
-        expect(loaded).not.to.be.undefined;
-
-        // Just run it through render.
-        var results = this.engine.render('mock.molds/engine', {'msg': 'hi!'});
-        expect(results).to.equal('<span>nunja/engine says: hi!</span>');
     });
 
     it('test async populate', function(done) {
@@ -142,7 +131,6 @@ describe('nunja/engine test case', function() {
         document.body.innerHTML = (
             '<div data-nunja="mock.molds/populate"></div>'
         );
-        this.clock.tick(500);
         var element = $('div')[0];
         this.engine.populate(element, {'msg': 'Hello World!'}, function() {
             var text = $('div')[0].innerHTML;
@@ -150,7 +138,6 @@ describe('nunja/engine test case', function() {
                 '<span>nunja/engine populated: Hello World!</span>');
             done();
         });
-        this.clock.tick(500);
     });
 
     it('test async include populate', function(done) {
@@ -161,7 +148,6 @@ describe('nunja/engine test case', function() {
         document.body.innerHTML = (
             '<div data-nunja="mock.molds/includes"></div>'
         );
-        this.clock.tick(500);
         var element = $('div')[0];
         this.engine.populate(element, {}, function() {
             var text = $('div')[0].innerHTML;
@@ -169,7 +155,6 @@ describe('nunja/engine test case', function() {
                 '<p><span>This is second level embedded</span></p>');
             done();
         });
-        this.clock.tick(500);
     });
 
 });

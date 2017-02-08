@@ -17,12 +17,20 @@ from calmjs.utils import which
 
 from nunja.spec import precompile_nunja
 from nunja.spec import rjs
+from nunja.spec import to_hex
 
 from calmjs.testing.mocks import StringIO
 from calmjs.testing.utils import mkdtemp
 from calmjs.testing.utils import remember_cwd
 from calmjs.testing.utils import rmtree
 from calmjs.testing.utils import setup_class_install_environment
+
+
+class MiscTestCase(unittest.TestCase):
+
+    def test_to_hex(self):
+        self.assertEqual(to_hex('a'), '61')
+        self.assertEqual(to_hex('\u306a'), 'e381aa')
 
 
 class SpecTestCase(unittest.TestCase):
@@ -162,6 +170,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
             plugin_source_map={
                 'fake!bad': '/some/broken/path',
                 'text!_core_/_default_wrapper_/template.nja': src_template,
+                'text!some/template.nja': src_template,
+                'text!some/other/data.json': src_template,
             },
             bundle_source_map={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
@@ -170,7 +180,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
         )
 
         rjs(spec, ())
-        precompiled_path = join(build_dir, '__nunja_precompiled__.js')
+        hex_name = to_hex('_core_/_default_wrapper_')
+        precompiled_path = join(build_dir, hex_name + '.js')
         self.assertFalse(exists(precompiled_path))
         self.assertNotIn('slim', spec['bundle_source_map']['nunjucks'])
 
@@ -190,14 +201,20 @@ class SpecIntegrationTestCase(unittest.TestCase):
         # is stored in this source tree for the core
         self.assertEqual(precompiled, core_compiled)
 
-        self.assertEqual(spec['transpile_source_map'], {
-            'nunja/__precompiled_nunjucks__': precompiled_path,
-        })
+        self.assertEqual(spec['transpile_source_map'], {})
+        self.assertEqual(
+            spec['bundle_source_map']['__nunja__/_core_/_default_wrapper_'],
+            precompiled_path,
+        )
 
         # this one untouched.
         self.assertEqual(spec['plugin_source_map'], {
             'fake!bad': '/some/broken/path',
             'text!_core_/_default_wrapper_/template.nja': src_template,
+            # all other ones that did not pass the test will be filtered
+            # out for other processing
+            'text!some/template.nja': src_template,
+            'text!some/other/data.json': src_template,
         })
 
     def test_core_compiled_slim(self):
@@ -218,7 +235,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
             },
         )
         rjs(spec, ('slim',))
-        precompiled_path = join(build_dir, '__nunja_precompiled__.js')
+        hex_name = to_hex('_core_/_default_wrapper_')
+        precompiled_path = join(build_dir, hex_name + '.js')
         spec.handle(BEFORE_COMPILE)
         self.assertIn('slim', spec['bundle_source_map']['nunjucks'])
         self.assertTrue(exists(precompiled_path))
