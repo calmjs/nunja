@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def to_hex(s):
-    return encode(s.encode('utf8'), 'hex').decode('utf8')
+    return encode(s.encode('utf8'), 'hex_codec').decode('utf8')
 
 
 def precompile_nunja(spec, slim=False):

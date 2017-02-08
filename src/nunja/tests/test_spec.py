@@ -29,8 +29,8 @@ from calmjs.testing.utils import setup_class_install_environment
 class MiscTestCase(unittest.TestCase):
 
     def test_to_hex(self):
-        self.assertEqual(to_hex('a'), '61')
-        self.assertEqual(to_hex('\u306a'), 'e381aa')
+        self.assertEqual(to_hex(u'a'), u'61')
+        self.assertEqual(to_hex(u'\u306a'), u'e381aa')
 
 
 class SpecTestCase(unittest.TestCase):
