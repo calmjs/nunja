@@ -9,6 +9,20 @@ var nunjucks = require('nunjucks');
 window.mocha.setup('bdd');
 
 
+/* istanbul ignore next */
+var describe_ = (
+    (nunjucks.compiler.compile !== undefined) ? describe : describe.skip);
+
+
+/* istanbul ignore next */
+if (describe_ === describe.skip) {
+    console.log(
+        'engine async tests requires compilation but nunjucks compiler not ' +
+        'available; skipping'
+    );
+}
+
+
 describe('nunja/engine simple test case', function() {
 
     beforeEach(function() {
@@ -54,7 +68,7 @@ describe('nunja/engine simple test case', function() {
 });
 
 
-describe('nunja/engine async test case', function() {
+describe_('nunja/engine async test case', function() {
 
     beforeEach(function() {
         this.server = sinon.fakeServer.create();

@@ -129,6 +129,12 @@ script:
 # Alternatively without nose
 #  - coverage run --include=src/* -m unittest nunja.tests.make_suite
 #  - coverage report -m
+
+# Slim, but testing molds
+#  - calmjs karma rjs nunja --source-registry=nunja.mold.tests,nunja.mold,calmjs.module --export-target=nunja.mold.tests.js --optional-advice=nunja[slim] -w
+# Then test the thing through the standalone runner
+#  - calmjs karma run --artifact=nunja.mold.tests.js -t calmjs.rjs nunja
+
 after_success:
   # only submit coverage when testing under linux.
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
