@@ -6,7 +6,6 @@ version = '0.0'
 classifiers = """
 Development Status :: 4 - Beta
 Environment :: Console
-Framework :: Setuptools Plugin
 Intended Audience :: Developers
 License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)
 Operating System :: OS Independent

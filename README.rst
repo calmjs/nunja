@@ -36,7 +36,25 @@ Installation
 ------------
 
 Currently under development; to begin, please clone this repository
-first.  Before the installation, please have |calmjs| installed first so
+first.
+
+Requirements
+~~~~~~~~~~~~
+
+As this package interoperates with a number of software libraries, a
+number of prerequisites are required for all the features to function
+correctly.  At the minimum, Python 2.7 or 3.3+ must be available; for
+the JavaScript/Node.js integration side, Node.js v4 or higher is highly
+recommended, though testing shows that the core parts should run even
+under Node.js v0.10.  However, the goal is to also make Node.js optional
+for users of downstream libraries if they include the generated
+JavaScript artifacts.  Tools to make this easy to do so will need to be
+done for |nunja|.  For the web browser, only modern web browsers are
+supported, please refer to the continuous integration configurations (in
+brief: Firefox 31, Chrome 40, IE 11, Safari 9; alternatively, run the
+tests against a target browser, if the tests passes it should work).
+
+Before the installation, please have |calmjs| installed first so
 that when ``python setup.py develop`` is executed at the root of this
 package's repository, the appropriate metadata files defined by the
 Calmjs framework will also be installed.  Failing that, |calmjs| should
@@ -61,25 +79,40 @@ Guidelines will be added as the system is formalized, and they follow:
 Deployment
 ----------
 
-To deploy this package as a static requirejs AMD artifact, the |calmjs|
-command can be used.
+Generally, this involves building a standalone static requirejs AMD
+artifact file which is then sent to the browsers used by the end-users
+to be used in conjunction with the packages that provide the molds.
+Such an artifact that has none of the default ``nunja.molds`` that are
+provided as examples should be generated like so through this invocation
+of the |calmjs| command:
+
+.. code:: sh
+
+    $ calmjs rjs --source-registry=calmjs.module nunja
+
+The above command will produce a ``nunja.js`` in the current directory
+that can be included in a ``<script>`` tag with the other AMD artifacts
+that may contain the actual molds.
+
+If one wishes to generate a complete artifact, and assuming the package
+to be deployed also lists |nunja| as a Python dependency (here |nunja|
+is simply used as an example), the following command can be invoked:
 
 .. code:: sh
 
     $ calmjs rjs nunja
 
-The above will simply build the core package which can be used for
-development of nunja molds or be served to end users.  If templates of
-the molds were to be statically included, the optional advice should be
-applied like so:
+This will simply build the same thing but the raw template strings will
+be included as is.  If they are to be compiled into JavaScript code, the
+optional advice should be applied like so:
 
 .. code:: sh
 
     $ calmjs rjs nunja --optional-advice=nunja
 
 Alternatively, the nunjucks slim library can be bundled instead, which
-will decrease the size of the final output, at the expense of the
-ability to dynamically compile templates on the client side.
+will decrease the size of the final output, but the ability for dynamic
+template compilation will be disabled on the client side.
 
 .. code:: sh
 
