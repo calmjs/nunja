@@ -10,7 +10,7 @@ var $ = utils.$;
 /* istanbul ignore next */
 try {
     // The precompiled core is definitely required
-    var __core__ = require('nunja/__core__');
+    require('nunja/__core__');
 }
 catch(e) {
     console.log(
@@ -49,11 +49,11 @@ var Engine = function(kwargs) {
 
 // global scan function - looks up data-nunja ids and look up
 // the default script, execute it on the afflicted element.
-Engine.prototype.scan = function (content) {
+Engine.prototype.scan = function(context) {
     /*
     Collates and returns all elements with data-nunja attributes.
     */
-    return $('[data-nunja]');
+    return $('[data-nunja]', context);
 };
 
 Engine.prototype.query_template = function (name) {
@@ -124,7 +124,8 @@ Engine.prototype.do_onload = function (content) {
     */
     var elements = this.scan(content);
     var self = this;
-    elements.forEach(function (element, index, array) {
+    // elements.forEach(function (element, index, array) {
+    elements.forEach(function (element) {
         self.init_element(element);
     });
 },
@@ -137,12 +138,12 @@ Engine.prototype.execute = function (mold_id, data) {
     */
     var template = this.load_mold(mold_id);
 
-    var data = data || {};
-    data['_nunja_data_'] = 'data-nunja="' + mold_id + '"';
-    data['_template_'] = template;
-    data['_wrapper_tag_'] = this._wrapper_tag_;
+    var params = data || {};
+    params['_nunja_data_'] = 'data-nunja="' + mold_id + '"';
+    params['_template_'] = template;
+    params['_wrapper_tag_'] = this._wrapper_tag_;
 
-    var results = this._core_template_.render(data);
+    var results = this._core_template_.render(params);
 
     return results;
 };
@@ -163,7 +164,7 @@ Engine.prototype.populate = function (element, data, cb) {
             tmpl.render(data, function(err, result) {
                 // TODO handle err if there is an error somewhere...
                 element.innerHTML = result;
-            cb();
+                cb();
             });
         });
     }

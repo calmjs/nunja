@@ -40,7 +40,7 @@ describe('nunja/utils test cases', function() {
         expect(target.dummy).to.be.undefined;
 
         addEventListeners($('[data-dummy]'), 'click', function(ev) {
-            ev.target.dummy = 'set'
+            ev.target.dummy = 'set';
         });
 
         target.click();

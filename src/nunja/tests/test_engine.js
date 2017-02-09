@@ -6,6 +6,8 @@ var loader = require('nunja/loader');
 var engine = require('nunja/engine');
 var nunjucks = require('nunjucks');
 
+var $ = utils.$;
+
 window.mocha.setup('bdd');
 
 
@@ -76,7 +78,7 @@ describe_('nunja/engine async test case', function() {
 
         this.server.respondWith(
             'GET', '/base/mock.molds/populate/template.nja',
-            function (xhr, id) {
+            function (xhr) {
                 xhr.respond(
                     200, {'Content-Type': 'text/plain'},
                     '<span>nunja/engine populated: {{ msg }}</span>'
@@ -86,7 +88,7 @@ describe_('nunja/engine async test case', function() {
 
         this.server.respondWith(
             'GET', '/base/mock.molds/includes/template.nja',
-            function (xhr, id) {
+            function (xhr) {
                 xhr.respond(
                     200, {'Content-Type': 'text/plain'},
                     '<p>{% include "mock.molds/includes/embedded.nja" %}</p>'
@@ -96,7 +98,7 @@ describe_('nunja/engine async test case', function() {
 
         this.server.respondWith(
             'GET', '/base/mock.molds/includes/embedded.nja',
-            function (xhr, id) {
+            function (xhr) {
                 xhr.respond(
                     200, {'Content-Type': 'text/plain'},
                     '<span>This is second level embedded</span>'

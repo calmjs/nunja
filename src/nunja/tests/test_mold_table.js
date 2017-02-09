@@ -37,7 +37,7 @@ describe('Basic nunja.molds/table rendering', function() {
             '    \n' +
             '  </tbody>\n' +
             '</table>\n'
-        )
+        );
     });
 
     it('Basic data rendering', function() {
@@ -69,7 +69,7 @@ describe('Basic nunja.molds/table rendering', function() {
             '    </tr>\n' +
             '  </tbody>\n' +
             '</table>\n'
-        )
+        );
     });
 
 });

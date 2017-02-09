@@ -1,4 +1,4 @@
-define([], function(core) {
+define([], function() {
     'use strict';
     return {};
 });

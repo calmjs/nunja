@@ -23,7 +23,7 @@ describe('nunja/loader async path test case', function() {
         this.server.autoRespond = true;
         this.server.respondWith(
             'GET', '/base/mock.molds/loaderasync/template.nja',
-            function (xhr, id) {
+            function (xhr) {
                 xhr.respond(
                     200, {'Content-Type': 'text/plain'},
                     '<span>Integrated mocked template async: {{ msg }}</span>'
@@ -187,7 +187,7 @@ describe('nunja/loader sync path test case', function() {
             return '<span>Manual defined sync: {{ msg }}</span>';
         });
         this.clock.tick(500);
-        require(['text!mock.molds/loadersync/template.nja'], function(t) {});
+        require(['text!mock.molds/loadersync/template.nja'], function() {});
         this.clock.tick(500);
 
         this.registry = new registry.Registry();

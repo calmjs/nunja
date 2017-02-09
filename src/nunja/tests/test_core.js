@@ -42,7 +42,7 @@ describe_('Engine template core rendering', function() {
         expect(results).to.equal(
             '<div data-nunja="nunja.testing.mold/basic">\n' +
             '<span>Hello User</span>\n\n</div>\n'
-        )
+        );
     });
 
 });

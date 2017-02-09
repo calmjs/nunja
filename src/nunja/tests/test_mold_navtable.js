@@ -37,7 +37,7 @@ describe('Basic nunja.molds/navtable rendering', function() {
             '    \n' +
             '  </tbody>\n' +
             '</table>\n'
-        )
+        );
     });
 
     it('Basic data rendering', function() {

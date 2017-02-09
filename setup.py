@@ -23,6 +23,9 @@ package_json = {
         "requirejs-text": "~2.0.12",
         "nunjucks": "~3.0.0",
     },
+    "devDependencies": {
+        "eslint": "~3.15.0",
+    }
 }
 
 long_description = (

@@ -111,7 +111,7 @@ install:
 
   # doing the env in this directory to save build time/bandwidth, as the
   # same environment will be used for both Python and JavaScript tests.
-  - calmjs npm --install nunja calmjs.dev -w -D
+  - calmjs npm --install nunja[dev] -w -D
   # out-of-band installation of platform specific dependencies
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       npm install karma-safari-launcher ;
@@ -123,8 +123,11 @@ script:
 
   # generate bundle/tests
   - mkdir manual
+  # eslint 3 only works in nodejs 4+
+  - if [[ "$TRAVIS_NODE_VERSION" != "0.12" ]]; then
+      eslint "src/**/*.js" ;
+    fi
   - calmjs karma -c --cover-test --browser=$BROWSER rjs nunja --build-dir=manual
-  - coverage report -m
 
 # Alternatively without nose
 #  - coverage run --include=src/* -m unittest nunja.tests.make_suite
@@ -136,6 +139,7 @@ script:
 #  - calmjs karma run --artifact=nunja.mold.tests.js -t calmjs.rjs nunja
 
 after_success:
+  - coverage report -m
   # only submit coverage when testing under linux.
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       rvm default;

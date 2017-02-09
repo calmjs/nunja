@@ -9,7 +9,7 @@ define([
         this.element = element;
         // Is this early kind of implicit hooking a good idea as the
         // general case?
-        this.hook()
+        this.hook();
     };
 
     Model.prototype.render = function () {
@@ -28,8 +28,8 @@ define([
         return function () {
             self.removeCount++;
             e && e.parentNode && e.parentNode.removeChild(e);
-        }
-    }
+        };
+    };
 
     Model.prototype.hook = function () {
         // bound for later usage in forloop.
@@ -48,7 +48,7 @@ define([
             });
         this.items = items;
         this.nodes = nodes;
-    }
+    };
 
     Model.prototype.reset = function () {
         this.resetCount++;

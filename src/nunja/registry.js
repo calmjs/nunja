@@ -6,8 +6,8 @@ common default values for the system.
 */
 
 var REQ_TMPL_NAME = 'template.nja';
-var DEFAULT_WRAPPER_NAME = '_core_/_default_wrapper_'
-var DEFAULT_WRAPPER_TAG = 'div'
+var DEFAULT_WRAPPER_NAME = '_core_/_default_wrapper_';
+var DEFAULT_WRAPPER_TAG = 'div';
 
 var Registry = function() {
 };

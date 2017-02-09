@@ -6,7 +6,7 @@ var registry = require('nunja/registry');
 describe('nunja/registry test case', function() {
 
     beforeEach(function() {
-        this.registry = new registry.Registry()
+        this.registry = new registry.Registry();
     });
 
     it('name_to_mold_id standard', function() {

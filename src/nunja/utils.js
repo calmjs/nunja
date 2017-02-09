@@ -1,4 +1,5 @@
 'use strict';
+
 /*
 This utils module provide helpers that work with acquiring nodes and
 helper functions that bulk apply functions to them.
@@ -20,7 +21,8 @@ function addEventListeners(elements, event_id, cb) {
     arguments provided.
     */
 
-    elements.forEach(function (el, index, array) {
+    // elements.forEach(function (el, index, array) {
+    elements.forEach(function (el) {
         el.addEventListener(event_id, cb);
     });
 }
@@ -28,4 +30,4 @@ function addEventListeners(elements, event_id, cb) {
 exports = {
     '$': $,
     'addEventListeners': addEventListeners,
-}
+};

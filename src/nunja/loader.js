@@ -2,7 +2,7 @@
 
 var NUNJA_PRECOMP_NS = '__nunja__';
 
-var RequireJSLoader = function(registry, async) {
+var RequireJSLoader = function(registry) {
     this.registry = registry;
 
     // async is always used to maximize usability, portability and
@@ -52,7 +52,7 @@ RequireJSLoader.prototype.getSource = function(name, callback) {
 
     if (!require.defined(template_path)) {
         //require([template_path], process)
-        require([module_name], get_precompiled, function(err) {
+        require([module_name], get_precompiled, function() {
             // retry with just the template_path
             compile_template();
         });
