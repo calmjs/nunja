@@ -7,9 +7,14 @@
         }
     },
     "rules": {
-        "semi": ["error", "always"],
         "indent": ["error", 4],
-        "no-console": ["off"]
+        "no-console": ["off"],
+        "no-trailing-spaces": ["error"],
+        "max-len": ["error", {
+            "code": 79,
+            "comments": 72
+        }],
+        "semi": ["error", "always"]
     },
     "env": {
         "browser": true,
