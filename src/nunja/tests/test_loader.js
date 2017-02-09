@@ -7,27 +7,6 @@ var nunjucks = require('nunjucks');
 window.mocha.setup('bdd');
 
 
-describe('nunja/loader utilities', function() {
-
-    it('name_to_mold_id standard', function() {
-        expect(loader.name_to_mold_id('ns.pkg/name/tmpl.nja')).to.equal(
-            'ns.pkg/name');
-        expect(loader.name_to_mold_id('ns.pkg/name/nested/tmpl.nja')).to.equal(
-            'ns.pkg/name');
-        // users shouldn't expect this to work, but it works like this
-        // now so document it as such.
-        expect(loader.name_to_mold_id('ns.pkg/name/data.json')).to.equal(
-            'ns.pkg/name');
-    });
-
-    it('name_to_mold_id badvalue', function() {
-        expect(loader.name_to_mold_id('ns.pkg/name.tmpl')).to.be.null;
-        expect(loader.name_to_mold_id('ns.pkg.nja')).to.be.null;
-    });
-
-});
-
-
 describe('nunja/loader async path test case', function() {
     // follows the full asynchronous path
 

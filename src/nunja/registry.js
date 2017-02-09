@@ -16,6 +16,13 @@ Registry.prototype.lookup_path = function(mold_id_path) {
     return 'text!' + mold_id_path;
 };
 
+
+Registry.prototype.name_to_mold_id = function(name) {
+    var match = name.match(/^[^\/]*\/[^\/]*\//);
+    return match ?  match[0].slice(0, -1) : null;
+};
+
+
 exports.Registry = Registry;
 exports.DEFAULT_WRAPPER_NAME = DEFAULT_WRAPPER_NAME;
 exports.DEFAULT_WRAPPER_TAG = DEFAULT_WRAPPER_TAG;

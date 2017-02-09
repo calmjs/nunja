@@ -15,19 +15,10 @@ var RequireJSLoader = function(registry, async) {
 };
 
 
-var name_to_mold_id = function(name) {
-    var match = name.match(/^[^\/]*\/[^\/]*\//);
-    if (match) {
-        return match[0].slice(0, -1);
-    }
-    return null;
-};
-
-
 RequireJSLoader.prototype.getSource = function(name, callback) {
     var self = this;
     var template_path = self.registry.lookup_path(name);
-    var mold_id = name_to_mold_id(name);
+    var mold_id = self.registry.name_to_mold_id(name);
     var module_name = NUNJA_PRECOMP_NS + '/' + mold_id;
 
     var process = function(template_str) {
@@ -77,4 +68,3 @@ RequireJSLoader.prototype.getSource = function(name, callback) {
 exports.RequireJSLoader = RequireJSLoader;
 // the "default" loader under the "default" name.
 exports.NunjaLoader = RequireJSLoader;
-exports.name_to_mold_id = name_to_mold_id;
