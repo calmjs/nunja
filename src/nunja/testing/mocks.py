@@ -94,6 +94,7 @@ def setup_tmp_mold_templates(testcase_inst):
     main_template = join(molddir, 'template.nja')
     sub_template = join(molddir, 'sub.nja')
     bad_template = join(moldroot, 'bad.nja')
+    filter_dump_template = join(molddir, 'filter_dump.nja')
 
     with open(main_template, 'w') as fd:
         fd.write('<div>{% include "tmp/mold/sub.nja" %}</div>')
@@ -104,6 +105,10 @@ def setup_tmp_mold_templates(testcase_inst):
     # for path traversal attack tests.
     with open(bad_template, 'w') as fd:
         fd.write('<bad>{{ data }}</bad>')
+
+    # for filter dump test
+    with open(filter_dump_template, 'w') as fd:
+        fd.write('<div>{{ data | dump }}</div>')
 
     # force the mtime to some time way in the past
     utime(sub_template, (-1, 1))

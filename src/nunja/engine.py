@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
+import json
+from functools import partial
 
 from jinja2 import Environment
 
@@ -48,6 +50,12 @@ class Engine(object):
             autoescape=True,
             loader=NunjaLoader(self.registry)
         )
+        # this filter is to match with nunjucks version (which calls
+        # JSON.stringify in JavaScript); construct a partial which is a
+        # callable to json.dumps with default parameters that mimic the
+        # JavaScript version of the called function.
+        self.env.filters['dump'] = partial(
+            json.dumps, sort_keys=True, separators=(',', ':'))
         self._required_template_name = _required_template_name
 
         self._core_template_ = self.load_mold(_wrapper_name)

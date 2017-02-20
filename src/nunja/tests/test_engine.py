@@ -53,6 +53,20 @@ class EngineTestCase(unittest.TestCase):
         tmpl = self.engine.fetch_path('tmp/mold/template.nja')
         self.assertEqual('<div>{% include "tmp/mold/sub.nja" %}</div>', tmpl)
 
+    def test_filter_dump(self):
+        # To mimic the JSON.stringify filter in nunjucks, provide the
+        # filter under the same name through json.dumps.  This will
+        # test that feature.
+        template = self.engine.load_template('tmp/mold/filter_dump.nja')
+        result = template.render(data={
+            'some': 'object', 'items': ['Hello', '<World>']})
+        self.assertEqual(result, (
+            '<div>{'
+            '&#34;items&#34;:[&#34;Hello&#34;,&#34;&lt;World&gt;&#34;],'
+            '&#34;some&#34;:&#34;object&#34;'
+            '}</div>'
+        ))
+
     def test_fetch_path_itemlist(self):
         registry = mocks.setup_testing_mold_templates_registry(self)
         engine = Engine(registry)
