@@ -15,7 +15,7 @@ function $(selector, context) {
         (context || document).querySelectorAll(selector));
 }
 
-function addEventListeners(elements, event_id, cb) {
+function addEventListeners(elements, event_id, cb, useCapture) {
     /*
     For each item in the selected list, call `addEventListener` with the
     arguments provided.
@@ -23,7 +23,7 @@ function addEventListeners(elements, event_id, cb) {
 
     // elements.forEach(function (el, index, array) {
     elements.forEach(function (el) {
-        el.addEventListener(event_id, cb);
+        el.addEventListener(event_id, cb, useCapture || false);
     });
 }
 
