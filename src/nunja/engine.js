@@ -71,22 +71,22 @@ Engine.prototype.query_template = function (name) {
     );
 };
 
-Engine.prototype.load_template = function (name) {
+Engine.prototype.load_template = function (name, cb) {
     /*
     Load the template identified by this name.
     */
-    return this.env.getTemplate(name);
+    return this.env.getTemplate(name, cb);
 };
 
-Engine.prototype.load_mold = function (mold_id) {
+Engine.prototype.load_mold = function (mold_id, cb) {
     /*
     Loads the default template for the mold identified by mold_id
     */
     return this.load_template(
-        mold_id + '/' + this._required_template_name);
+        mold_id + '/' + this._required_template_name, cb);
 };
 
-Engine.prototype.load_element = function(element) {
+Engine.prototype.load_element = function(element, cb) {
     /*
     Process this element.  This also ensures the template is
     available at some point.
@@ -94,7 +94,7 @@ Engine.prototype.load_element = function(element) {
     Returns the mold_id associated with this.
     */
     var mold_id = element.attributes.getNamedItem('data-nunja').value;
-    this.load_mold(mold_id);
+    this.load_mold(mold_id, cb);
     return mold_id;
 };
 
@@ -154,29 +154,41 @@ Engine.prototype.populate = function (element, data, cb) {
     data involved.  If a callback is provided, do so asynchronously.
     */
     var mold_id = element.getAttribute('data-nunja');
+
     if (!(cb instanceof Function)) {
         element.innerHTML = this.render(mold_id, data);
     }
     else {
         // TODO figure out whether to split this dupe into function
-        var name = mold_id + '/' + this._required_template_name;
-        this.env.getTemplate(name, function(err, tmpl) {
-            tmpl.render(data, function(err, result) {
-                // TODO handle err if there is an error somewhere...
-                element.innerHTML = result;
-                cb();
-            });
+        this.render(mold_id, data, function(err, result) {
+            // TODO handle err if there is an error somewhere...
+            element.innerHTML = result;
+            cb();
         });
     }
+
 };
 
-Engine.prototype.render = function (mold_id, data) {
+Engine.prototype.render = function (mold_id, data, cb) {
     /*
     Very simple, basic rendering method.
+
+    The standard calling is done without the callback, which follow a
+    synchronous flow.  If the callback ``cb`` is provided, the calling
+    will be done asynchronously, where the cb must accept an error
+    object produced by the template.render, and also the result of the
+    rendering.
     */
-    var template = this.load_mold(mold_id);
-    var results = template.render(data);
-    return results;
+    if (cb instanceof Function) {
+        this.load_mold(mold_id, function(err, tmpl) {
+            tmpl.render(data, cb);
+        });
+    }
+    else {
+        var template = this.load_mold(mold_id);
+        var results = template.render(data);
+        return results;
+    }
 };
 
 exports.Engine = Engine;

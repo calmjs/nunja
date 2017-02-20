@@ -46,6 +46,7 @@ describe('nunja/engine simple test case', function() {
         // cleanups as it is best practice.
         delete window.nunjucksPrecompiled['check/template.nja'];
         requirejs.undef('text!check/template.nja');
+        requirejs.undef('text!dummy/mold/template.nja');
         this.clock.restore();
         document.body.innerHTML = "";
     });
@@ -67,6 +68,20 @@ describe('nunja/engine simple test case', function() {
         window.nunjucksPrecompiled['check/template.nja'] = function() {};
         expect(this.engine.query_template('check/template.nja')).to.be.true;
     });
+
+    it('test simple execute, render', function() {
+        define('text!dummy/mold/template.nja', [], function () {
+            return 'dummy';
+        });
+        require(['text!dummy/mold/template.nja'], function() {});
+        this.clock.tick(500);
+
+        expect(this.engine.execute('dummy/mold')).to.equal(
+            '<div data-nunja="dummy/mold">\ndummy\n</div>\n');
+
+        expect(this.engine.render('dummy/mold')).to.equal('dummy');
+    });
+
 });
 
 
