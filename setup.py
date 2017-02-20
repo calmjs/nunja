@@ -77,7 +77,7 @@ setup(
             'nunja = nunja',
         ],
         'calmjs.module.tests': [
-            'nunja = nunja.tests',
+            'nunja.tests = nunja.tests',
         ],
         'nunja.mold': [
             '_core_ = nunja:_core_',
