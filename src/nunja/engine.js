@@ -130,22 +130,29 @@ Engine.prototype.do_onload = function (content) {
     });
 },
 
-Engine.prototype.execute = function (mold_id, data) {
+Engine.prototype.execute = function (mold_id, data, cb) {
     /*
     Execute the complete template, which renders a parent block
     enclosing with the template that provides the nunja-data
     attribute.
     */
-    var template = this.load_mold(mold_id);
+    var self = this;
 
-    var params = data || {};
-    params['_nunja_data_'] = 'data-nunja="' + mold_id + '"';
-    params['_template_'] = template;
-    params['_wrapper_tag_'] = this._wrapper_tag_;
+    var _execute = function(error, template) {
+        var params = data || {};
+        params['_nunja_data_'] = 'data-nunja="' + mold_id + '"';
+        params['_template_'] = template;
+        params['_wrapper_tag_'] = self._wrapper_tag_;
+        return self._core_template_.render(params, cb);
+    };
 
-    var results = this._core_template_.render(params);
-
-    return results;
+    if (cb instanceof Function) {
+        this.load_mold(mold_id, _execute);
+    }
+    else {
+        var template = this.load_mold(mold_id);
+        return _execute(null, template);
+    }
 };
 
 Engine.prototype.populate = function (element, data, cb) {
@@ -159,7 +166,6 @@ Engine.prototype.populate = function (element, data, cb) {
         element.innerHTML = this.render(mold_id, data);
     }
     else {
-        // TODO figure out whether to split this dupe into function
         this.render(mold_id, data, function(err, result) {
             // TODO handle err if there is an error somewhere...
             element.innerHTML = result;

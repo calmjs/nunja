@@ -188,4 +188,16 @@ describe_('nunja/engine async test case', function() {
         });
     });
 
+    it('test async execute', function(done) {
+        this.engine.execute('mock.molds/includes', {}, function(err, text) {
+            expect(err).to.be.null;
+            expect(text).to.equal(
+                '<div data-nunja="mock.molds/includes">\n' +
+                '<p><span>This is second level embedded</span></p>\n' +
+                '</div>\n'
+            );
+            done();
+        });
+    });
+
 });
