@@ -111,6 +111,12 @@ Engine.prototype.init_element = function(element) {
         if (main && main.init instanceof Function) {
             main.init(element);
         }
+    }, function() {
+        // TODO whether have this be a definable behavior, i.e. whether
+        // to leave undefine instead so import can be attempted again,
+        // or that it be hard-defined to be nothing like so:
+        // define(entry_point, [], {});
+        // requirejs.undef(entry_point);
     });
 };
 
@@ -164,11 +170,14 @@ Engine.prototype.populate = function (element, data, cb) {
 
     if (!(cb instanceof Function)) {
         element.innerHTML = this.render(mold_id, data);
+        this.init_element(element);
     }
     else {
+        var self = this;
         this.render(mold_id, data, function(err, result) {
             // TODO handle err if there is an error somewhere...
             element.innerHTML = result;
+            self.init_element(element);
             cb();
         });
     }

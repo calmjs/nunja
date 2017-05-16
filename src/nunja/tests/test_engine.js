@@ -47,6 +47,7 @@ describe('nunja/engine simple test case', function() {
         delete window.nunjucksPrecompiled['check/template.nja'];
         requirejs.undef('text!check/template.nja');
         requirejs.undef('text!dummy/mold/template.nja');
+        requirejs.undef('dummy/mold/index');
         this.clock.restore();
         document.body.innerHTML = "";
     });
@@ -80,6 +81,56 @@ describe('nunja/engine simple test case', function() {
             '<div data-nunja="dummy/mold">\ndummy\n</div>\n');
 
         expect(this.engine.render('dummy/mold')).to.equal('dummy');
+    });
+
+    it('test simple populate, undefined index', function(done) {
+        document.body.innerHTML = '<div data-nunja="dummy/mold"></div>';
+        var element = $('div')[0];
+
+        define('text!dummy/mold/template.nja', [], function () {
+            return 'dummy';
+        });
+        require(['text!dummy/mold/template.nja'], function() {});
+        this.clock.tick(500);
+
+        // forcing an error import handling here to prevent requirejs
+        // from raising an exception after this execution was done by
+        // running the test within the error handler to ensure the
+        // error handler actually gets executed.
+        var self = this;
+        require(['dummy/mold/index'], function() {}, function() {
+            self.engine.populate(element, {});
+            self.clock.tick(500);
+            expect(document.body.innerHTML).to.equal(
+                '<div data-nunja="dummy/mold">dummy</div>');
+            done();
+        });
+        this.clock.tick(500);
+
+    });
+
+    it('test simple populate, defined index', function() {
+        document.body.innerHTML = '<div data-nunja="dummy/mold"></div>';
+        var element = $('div')[0];
+        var called = false;
+
+        // define modules
+        define('text!dummy/mold/template.nja', [], function () {
+            return 'dummy';
+        });
+        require(['text!dummy/mold/template.nja'], function() {});
+        define('dummy/mold/index', [], function () {
+            return {'init': function() {
+                called = true;
+            }};
+        });
+        require(['dummy/mold/index'], function() {});
+        this.clock.tick(500);
+        this.engine.populate(element, {});
+        this.clock.tick(500);
+        expect(document.body.innerHTML).to.equal(
+            '<div data-nunja="dummy/mold">dummy</div>');
+        expect(called).to.be.true;
     });
 
 });
@@ -148,6 +199,7 @@ describe_('nunja/engine async test case', function() {
         requirejs.undef('text!mock.molds/populates/template.nja');
         requirejs.undef('text!mock.molds/includes/template.nja');
         requirejs.undef('text!mock.molds/includes/embedded.nja');
+        requirejs.undef('mock.molds/populate/index');
         this.server.restore();
         document.body.innerHTML = "";
     });
@@ -171,9 +223,10 @@ describe_('nunja/engine async test case', function() {
         });
     });
 
-    it('test async include populate', function(done) {
+    it('test async include populate, no trigger', function(done) {
         // Same as above, but it includes another template that required
         // to be loaded.
+        // Note the lack of the index module.
 
         // First set the innerHTML to a dummy rendering
         document.body.innerHTML = (
@@ -185,6 +238,42 @@ describe_('nunja/engine async test case', function() {
             expect(text).to.equal(
                 '<p><span>This is second level embedded</span></p>');
             done();
+        });
+    });
+
+    it('test async populate trigger', function(done) {
+        // Given that the rendering for client side interactions almost
+        // always require async to be responsive, the populate method
+        // can and should function without the explicit load_mold like
+        // above.
+
+        var init_element;
+        var self = this;
+
+        // First set the innerHTML to a dummy rendering
+        document.body.innerHTML = (
+            '<div data-nunja="mock.molds/populate"></div>'
+        );
+        // Also define the module
+        define('mock.molds/populate/index', [], function() {
+            return {'init': function(el) {
+                init_element = el;
+            }};
+        });
+
+        // ensure the index module is first loaded to avoid async errors
+        require(['mock.molds/populate/index'], function() {
+            var element = $('div')[0];
+            self.engine.populate(element, {'msg': 'Hello World!'}, function() {
+                var text = element.innerHTML;
+                expect(text).to.equal(
+                    '<span>nunja/engine populated: Hello World!</span>');
+                // DOM objects behave weird on assignment, so we cannot
+                // compare their identities directly.
+                expect(init_element.innerHTML).to.equal(
+                    '<span>nunja/engine populated: Hello World!</span>');
+                done();
+            });
         });
     });
 
