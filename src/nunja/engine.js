@@ -134,7 +134,7 @@ Engine.prototype.do_onload = function (content) {
     elements.forEach(function (element) {
         self.init_element(element);
     });
-},
+};
 
 Engine.prototype.execute = function (mold_id, data, cb) {
     /*
