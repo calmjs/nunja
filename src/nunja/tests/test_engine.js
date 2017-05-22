@@ -38,6 +38,12 @@ describe('nunja/engine simple test case', function() {
             'env': this.env,
             'registry': this.registry,
         });
+        window.nunjucksPrecompiled["dummy/mold/template.nja"] = (
+            function() { function root(env, context, frame, runtime, cb) {
+                var output = "dummy";
+                cb(null, output);
+            } return {root: root};}
+        )();
     });
 
     afterEach(function() {
@@ -45,6 +51,7 @@ describe('nunja/engine simple test case', function() {
         // test less likely to give false positives.  Still, do the
         // cleanups as it is best practice.
         delete window.nunjucksPrecompiled['check/template.nja'];
+        delete window.nunjucksPrecompiled['dummy/mold/template.nja'];
         requirejs.undef('text!check/template.nja');
         requirejs.undef('text!dummy/mold/template.nja');
         requirejs.undef('dummy/mold/index');
@@ -71,12 +78,6 @@ describe('nunja/engine simple test case', function() {
     });
 
     it('test simple execute, render', function() {
-        define('text!dummy/mold/template.nja', [], function () {
-            return 'dummy';
-        });
-        require(['text!dummy/mold/template.nja'], function() {});
-        this.clock.tick(500);
-
         expect(this.engine.execute('dummy/mold')).to.equal(
             '<div data-nunja="dummy/mold">\ndummy\n</div>\n');
 
@@ -86,12 +87,6 @@ describe('nunja/engine simple test case', function() {
     it('test simple populate, undefined index', function(done) {
         document.body.innerHTML = '<div data-nunja="dummy/mold"></div>';
         var element = $('div')[0];
-
-        define('text!dummy/mold/template.nja', [], function () {
-            return 'dummy';
-        });
-        require(['text!dummy/mold/template.nja'], function() {});
-        this.clock.tick(500);
 
         // forcing an error import handling here to prevent requirejs
         // from raising an exception after this execution was done by
@@ -113,12 +108,6 @@ describe('nunja/engine simple test case', function() {
         document.body.innerHTML = '<div data-nunja="dummy/mold"></div>';
         var element = $('div')[0];
         var called = false;
-
-        // define modules
-        define('text!dummy/mold/template.nja', [], function () {
-            return 'dummy';
-        });
-        require(['text!dummy/mold/template.nja'], function() {});
         define('dummy/mold/index', [], function () {
             return {'init': function() {
                 called = true;
