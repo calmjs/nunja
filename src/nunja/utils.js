@@ -27,7 +27,5 @@ function addEventListeners(elements, event_id, cb, useCapture) {
     });
 }
 
-exports = {
-    '$': $,
-    'addEventListeners': addEventListeners,
-};
+exports.$ = $;
+exports.addEventListeners = addEventListeners;
