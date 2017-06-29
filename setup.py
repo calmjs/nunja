@@ -87,6 +87,7 @@ setup(
         ],
         'calmjs.toolchain.advice': [
             'calmjs.rjs.toolchain:RJSToolchain = nunja.spec:rjs',
+            'calmjs.webpack.toolchain:WebpackToolchain = nunja.spec:webpack',
         ],
     },
     test_suite="nunja.tests.make_suite",
