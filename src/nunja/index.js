@@ -1,23 +1,21 @@
 'use strict';
 
 
-
-var core = require('nunja/core');
+var _main = function() {
+    var core = require('nunja/core');
+    core.engine.do_onload(window.document.body);
+    console.log('nunja applied for document.body');
+};
 
 var main = function() {
     if ((typeof window !== 'undefined') && (window.document)) {
-        var f = function() {
-            core.engine.do_onload(window.document.body);
-            console.log('nunja applied for document.body');
-        };
-
         /* istanbul ignore next */
         if (window.document.readyState != 'loading') {
-            f();
+            _main();
         }
         else {
             console.log('registering DOMContentLoaded event for nunja');
-            window.document.addEventListener('DOMContentLoaded', f);
+            window.document.addEventListener('DOMContentLoaded', _main);
         }
     }
 };
