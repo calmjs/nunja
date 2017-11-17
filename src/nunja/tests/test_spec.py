@@ -283,6 +283,11 @@ class SpecIntegrationTestCase(unittest.TestCase):
         spec.handle(BEFORE_COMPILE)
         self.assertIn('slim', spec['bundle_sourcepath']['nunjucks'])
         self.assertTrue(exists(precompiled_path))
+        self.assertEqual({
+            '__nunja__/_core_/_default_wrapper_': {
+                'exports': 'nunjucksPrecompiled'
+            },
+        }, spec['shim'])
 
     def test_core_compiled_slim_empty_case(self):
         remember_cwd(self)
