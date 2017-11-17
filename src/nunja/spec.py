@@ -25,7 +25,7 @@ def to_hex(s):
 
 def precompile_nunja(spec, slim=False):
     required = {
-        'plugin_source_map', 'transpile_source_map', 'bundle_source_map',
+        'plugin_sourcepath', 'transpile_sourcepath', 'bundle_sourcepath',
         BUILD_DIR,
     }
     missing = required.difference(spec.keys())
@@ -34,11 +34,11 @@ def precompile_nunja(spec, slim=False):
             'cannot precompile_nunja if spec is missing keys {%s}' % ', '.join(
                 sorted(missing)))
 
-    plugin_source_map = spec['plugin_source_map']
+    plugin_sourcepath = spec['plugin_sourcepath']
     require_stmt = 'var nunjucks = require("nunjucks");\n'
-    standard_source_map = {}
+    standard_sourcepath = {}
     molds = defaultdict(list)
-    for k, path in plugin_source_map.items():
+    for k, path in plugin_sourcepath.items():
         # could express this more succinctly with regex, probably
         values = k.split('!', 2)[:2]
         plugin, name = values
@@ -46,12 +46,12 @@ def precompile_nunja(spec, slim=False):
         if path == EMPTY:
             continue
         elif plugin != 'text' and not name.endswith('.nja'):
-            standard_source_map[k] = path
+            standard_sourcepath[k] = path
             continue
         elif len(parts) < 3:
             # a template with an incompatible naming scheme
             # TODO should warn about this?
-            standard_source_map[k] = path
+            standard_sourcepath[k] = path
             continue
 
         mold_id = '/'.join(parts[:2])
@@ -76,17 +76,17 @@ def precompile_nunja(spec, slim=False):
                 for stdout in precompiled:
                     fd.write(stdout)
             modname = '/'.join([NUNJA_PRECOMP_NS, mold_id])
-            spec['bundle_source_map'][modname] = f
+            spec['bundle_sourcepath'][modname] = f
             spec['shim'] = spec.get('shim', {})
             spec['shim'][modname] = {
                 'exports': 'nunjucksPrecompiled'
             }
 
     if slim:
-        spec['plugin_source_map'] = standard_source_map
-        nunjucks_path = spec['bundle_source_map'].get('nunjucks')
+        spec['plugin_sourcepath'] = standard_sourcepath
+        nunjucks_path = spec['bundle_sourcepath'].get('nunjucks')
         if nunjucks_path and nunjucks_path != EMPTY:
-            spec['bundle_source_map']['nunjucks'] = join(
+            spec['bundle_sourcepath']['nunjucks'] = join(
                 dirname(nunjucks_path), 'nunjucks-slim.js')
 
 

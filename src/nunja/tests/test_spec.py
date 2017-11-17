@@ -50,38 +50,38 @@ class SpecTestCase(unittest.TestCase):
         self.assertEqual(
             e.exception.args[0],
             'cannot precompile_nunja if spec is missing keys '
-            '{bundle_source_map, plugin_source_map, transpile_source_map}'
+            '{bundle_sourcepath, plugin_sourcepath, transpile_sourcepath}'
         )
 
     def test_empty(self):
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={},
-            bundle_source_map={
+            plugin_sourcepath={},
+            bundle_sourcepath={
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         precompile_nunja(spec)
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
-        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+        self.assertNotIn('nunjucks', spec['bundle_sourcepath'])
 
     def test_nunjucks(self):
         nunjucks_path = join('node_modules', 'nunjucks', 'nunjucks.js'),
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={},
-            bundle_source_map={
+            plugin_sourcepath={},
+            bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         precompile_nunja(spec)
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
-        self.assertEqual(spec['bundle_source_map']['nunjucks'], nunjucks_path)
+        self.assertEqual(spec['bundle_sourcepath']['nunjucks'], nunjucks_path)
 
     def test_nunjucks_slim(self):
         nunjucks_path = join('node_modules', 'nunjucks', 'nunjucks.js')
@@ -89,42 +89,42 @@ class SpecTestCase(unittest.TestCase):
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={},
-            bundle_source_map={
+            plugin_sourcepath={},
+            bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         precompile_nunja(spec, slim=True)
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
-        self.assertEqual(spec['bundle_source_map']['nunjucks'], nunjucks_slim)
+        self.assertEqual(spec['bundle_sourcepath']['nunjucks'], nunjucks_slim)
 
     def test_nunjucks_slim_empty(self):
         nunjucks_path = 'empty:'
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={},
-            bundle_source_map={
+            plugin_sourcepath={},
+            bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         precompile_nunja(spec, slim=True)
-        self.assertEqual(spec['bundle_source_map']['nunjucks'], 'empty:')
+        self.assertEqual(spec['bundle_sourcepath']['nunjucks'], 'empty:')
 
     def test_stubbed_empty(self):
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={
+            plugin_sourcepath={
                 'text!demo/template.nja': 'empty:',
             },
-            bundle_source_map={
+            bundle_sourcepath={
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         with pretty_logging('nunja', stream=StringIO()) as stream:
@@ -132,7 +132,7 @@ class SpecTestCase(unittest.TestCase):
 
         self.assertNotIn('failed', stream.getvalue())
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
-        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+        self.assertNotIn('nunjucks', spec['bundle_sourcepath'])
 
 
 @unittest.skipIf(which('npm') is None, 'npm not found.')
@@ -167,23 +167,23 @@ class SpecIntegrationTestCase(unittest.TestCase):
 
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={
+            plugin_sourcepath={
                 'fake!bad': '/some/broken/path',
                 'text!_core_/_default_wrapper_/template.nja': src_template,
                 'text!some/template.nja': src_template,
                 'text!some/other/data.json': src_template,
             },
-            bundle_source_map={
+            bundle_sourcepath={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
             },
-            transpile_source_map={},
+            transpile_sourcepath={},
         )
 
         rjs(spec, ())
         hex_name = to_hex('_core_/_default_wrapper_')
         precompiled_path = join(build_dir, hex_name + '.js')
         self.assertFalse(exists(precompiled_path))
-        self.assertNotIn('slim', spec['bundle_source_map']['nunjucks'])
+        self.assertNotIn('slim', spec['bundle_sourcepath']['nunjucks'])
 
         # now trigger the advice
         spec.handle(BEFORE_COMPILE)
@@ -201,14 +201,14 @@ class SpecIntegrationTestCase(unittest.TestCase):
         # is stored in this source tree for the core
         self.assertEqual(precompiled, core_compiled)
 
-        self.assertEqual(spec['transpile_source_map'], {})
+        self.assertEqual(spec['transpile_sourcepath'], {})
         self.assertEqual(
-            spec['bundle_source_map']['__nunja__/_core_/_default_wrapper_'],
+            spec['bundle_sourcepath']['__nunja__/_core_/_default_wrapper_'],
             precompiled_path,
         )
 
         # this one untouched.
-        self.assertEqual(spec['plugin_source_map'], {
+        self.assertEqual(spec['plugin_sourcepath'], {
             'fake!bad': '/some/broken/path',
             'text!_core_/_default_wrapper_/template.nja': src_template,
             # all other ones that did not pass the test will be filtered
@@ -226,11 +226,11 @@ class SpecIntegrationTestCase(unittest.TestCase):
 
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={
+            plugin_sourcepath={
                 'text!_core_/_default_wrapper_/template.nja': src_template,
             },
-            transpile_source_map={},
-            bundle_source_map={
+            transpile_sourcepath={},
+            bundle_sourcepath={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
             },
         )
@@ -238,7 +238,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
         hex_name = to_hex('_core_/_default_wrapper_')
         precompiled_path = join(build_dir, hex_name + '.js')
         spec.handle(BEFORE_COMPILE)
-        self.assertIn('slim', spec['bundle_source_map']['nunjucks'])
+        self.assertIn('slim', spec['bundle_sourcepath']['nunjucks'])
         self.assertTrue(exists(precompiled_path))
 
     def test_core_compiled_slim_empty_case(self):
@@ -247,13 +247,13 @@ class SpecIntegrationTestCase(unittest.TestCase):
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={},
-            transpile_source_map={},
-            bundle_source_map={},
+            plugin_sourcepath={},
+            transpile_sourcepath={},
+            bundle_sourcepath={},
         )
         rjs(spec, ('slim',))
         spec.handle(BEFORE_COMPILE)
-        self.assertNotIn('nunjucks', spec['bundle_source_map'])
+        self.assertNotIn('nunjucks', spec['bundle_sourcepath'])
 
     def test_core_compiled_failure_bad_template(self):
         remember_cwd(self)
@@ -267,11 +267,11 @@ class SpecIntegrationTestCase(unittest.TestCase):
 
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={
+            plugin_sourcepath={
                 'text!mold/dummy/template.nja': src_template,
             },
-            transpile_source_map={},
-            bundle_source_map={},
+            transpile_sourcepath={},
+            bundle_sourcepath={},
         )
         build_dir = mkdtemp(self)
         rjs(spec, ())
@@ -293,11 +293,11 @@ class SpecIntegrationTestCase(unittest.TestCase):
 
         spec = Spec(
             build_dir=build_dir,
-            plugin_source_map={
+            plugin_sourcepath={
                 'text!nunja/dummy/no_such_template.nja': src_template,
             },
-            transpile_source_map={},
-            bundle_source_map={},
+            transpile_sourcepath={},
+            bundle_sourcepath={},
         )
         build_dir = mkdtemp(self)
         rjs(spec, ('slim',))
