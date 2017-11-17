@@ -20,6 +20,7 @@ Programming Language :: Python :: 3.6
 package_json = {
     "dependencies": {
         "requirejs-text": "~2.0.12",
+        "text-loader": "~0.0.1",
         "nunjucks": "~3.0.0",
     },
     "devDependencies": {
@@ -50,16 +51,21 @@ setup(
     zip_safe=False,
     include_package_data=True,
     package_json=package_json,
-    calmjs_module_registry=['nunja.mold'],
+    calmjs_module_registry=['calmjs.module', 'nunja.mold'],
     install_requires=[
         'Jinja2>=2.4',
-        'calmjs.rjs',
         'calmjs>=3.0.0dev',
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
     extras_require={
         'dev': [
             'calmjs.dev>=2.0.0dev',
+        ],
+        'rjs': [
+             'calmjs.rjs',
+        ],
+        'webpack': [
+             'calmjs.webpack',
         ],
     },
     extras_calmjs={
@@ -74,6 +80,9 @@ setup(
         ],
         'calmjs.module': [
             'nunja = nunja',
+        ],
+        'calmjs.node_modules': [
+            'nunjucks/browser/nunjucks.js = nunjucks',
         ],
         'calmjs.module.tests': [
             'nunja.tests = nunja.tests',
