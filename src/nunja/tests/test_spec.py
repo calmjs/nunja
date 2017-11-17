@@ -18,6 +18,7 @@ from calmjs.utils import which
 from nunja.spec import nunjucks_nja_patt
 from nunja.spec import precompile_nunja
 from nunja.spec import rjs
+from nunja.spec import webpack
 from nunja.spec import to_hex
 
 from calmjs.testing.mocks import StringIO
@@ -76,9 +77,9 @@ class NameTestCase(unittest.TestCase):
         self.assertAllInvalid(nunjucks_nja_patt.match, invalid)
 
 
-class SpecTestCase(unittest.TestCase):
+class SpecGeneralTestCase(unittest.TestCase):
     """
-    Test out the precompiled template compiler
+    Test out the precompile template process using the generic function.
     """
 
     def test_missing_keys(self):
@@ -88,12 +89,13 @@ class SpecTestCase(unittest.TestCase):
         )
 
         with self.assertRaises(AdviceAbort) as e:
-            precompile_nunja(spec)
+            precompile_nunja(
+                spec, False, 'myplugin_sourcepath', 'mybundle_sourcepath')
 
         self.assertEqual(
             e.exception.args[0],
             'cannot precompile_nunja if spec is missing keys '
-            '{bundle_sourcepath, plugin_sourcepath, transpile_sourcepath}'
+            '{mybundle_sourcepath, myplugin_sourcepath}'
         )
 
     def test_empty(self):
@@ -103,10 +105,9 @@ class SpecTestCase(unittest.TestCase):
             plugin_sourcepath={},
             bundle_sourcepath={
             },
-            transpile_sourcepath={},
         )
 
-        precompile_nunja(spec)
+        precompile_nunja(spec, False, 'plugin_sourcepath', 'bundle_sourcepath')
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
         self.assertNotIn('nunjucks', spec['bundle_sourcepath'])
 
@@ -119,10 +120,9 @@ class SpecTestCase(unittest.TestCase):
             bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_sourcepath={},
         )
 
-        precompile_nunja(spec)
+        precompile_nunja(spec, False, 'plugin_sourcepath', 'bundle_sourcepath')
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
         self.assertEqual(spec['bundle_sourcepath']['nunjucks'], nunjucks_path)
 
@@ -136,14 +136,13 @@ class SpecTestCase(unittest.TestCase):
             bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_sourcepath={},
         )
 
-        precompile_nunja(spec, slim=True)
+        precompile_nunja(spec, True, 'plugin_sourcepath', 'bundle_sourcepath')
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
         self.assertEqual(spec['bundle_sourcepath']['nunjucks'], nunjucks_slim)
 
-    def test_nunjucks_slim_empty(self):
+    def test_nunjucks_slim_empty_unspecified(self):
         nunjucks_path = 'empty:'
         build_dir = mkdtemp(self)
         spec = Spec(
@@ -152,11 +151,25 @@ class SpecTestCase(unittest.TestCase):
             bundle_sourcepath={
                 'nunjucks': nunjucks_path,
             },
-            transpile_sourcepath={},
         )
+        precompile_nunja(spec, True, 'plugin_sourcepath', 'bundle_sourcepath')
+        self.assertNotEqual(spec['bundle_sourcepath']['nunjucks'], 'empty:')
 
-        precompile_nunja(spec, slim=True)
-        self.assertEqual(spec['bundle_sourcepath']['nunjucks'], 'empty:')
+    def test_nunjucks_slim_empty_specified(self):
+        nunjucks_path = 'about:blank'
+        build_dir = mkdtemp(self)
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_sourcepath={},
+            bundle_sourcepath={
+                'nunjucks': nunjucks_path,
+            },
+        )
+        precompile_nunja(
+            spec, True, 'plugin_sourcepath', 'bundle_sourcepath',
+            omit_paths=('about:blank',)
+        )
+        self.assertEqual(spec['bundle_sourcepath']['nunjucks'], 'about:blank')
 
     def test_stubbed_empty(self):
         build_dir = mkdtemp(self)
@@ -167,11 +180,13 @@ class SpecTestCase(unittest.TestCase):
             },
             bundle_sourcepath={
             },
-            transpile_sourcepath={},
         )
 
         with pretty_logging('nunja', stream=StringIO()) as stream:
-            precompile_nunja(spec)
+            precompile_nunja(
+                spec, True, 'plugin_sourcepath', 'bundle_sourcepath',
+                omit_paths=('empty:',)
+            )
 
         self.assertNotIn('failed', stream.getvalue())
         self.assertFalse(exists(join(build_dir, '__nunja_precompiled__.js')))
@@ -200,7 +215,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
             return
         rmtree(cls._cls_tmpdir)
 
-    def test_core_compiled(self):
+    def test_rjs_core_compiled(self):
         remember_cwd(self)
         chdir(self._env_root)
 
@@ -219,7 +234,6 @@ class SpecIntegrationTestCase(unittest.TestCase):
             bundle_sourcepath={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
             },
-            transpile_sourcepath={},
         )
 
         rjs(spec, ())
@@ -244,7 +258,6 @@ class SpecIntegrationTestCase(unittest.TestCase):
         # is stored in this source tree for the core
         self.assertEqual(precompiled, core_compiled)
 
-        self.assertEqual(spec['transpile_sourcepath'], {})
         self.assertEqual(
             spec['bundle_sourcepath']['__nunja__/_core_/_default_wrapper_'],
             precompiled_path,
@@ -260,7 +273,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
             'text!some/other/data.json': src_template,
         })
 
-    def test_core_compiled_slim(self):
+    def test_rjs_core_compiled_slim(self):
         remember_cwd(self)
         chdir(self._env_root)
         src_template = resource_filename(Requirement.parse('nunja'), join(
@@ -272,7 +285,6 @@ class SpecIntegrationTestCase(unittest.TestCase):
             plugin_sourcepath={
                 'text!_core_/_default_wrapper_/template.nja': src_template,
             },
-            transpile_sourcepath={},
             bundle_sourcepath={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
             },
@@ -289,21 +301,20 @@ class SpecIntegrationTestCase(unittest.TestCase):
             },
         }, spec['shim'])
 
-    def test_core_compiled_slim_empty_case(self):
+    def test_rjs_core_compiled_slim_empty_case(self):
         remember_cwd(self)
         chdir(self._env_root)
         build_dir = mkdtemp(self)
         spec = Spec(
             build_dir=build_dir,
             plugin_sourcepath={},
-            transpile_sourcepath={},
             bundle_sourcepath={},
         )
         rjs(spec, ('slim',))
         spec.handle(BEFORE_COMPILE)
         self.assertNotIn('nunjucks', spec['bundle_sourcepath'])
 
-    def test_core_compiled_failure_bad_template(self):
+    def test_rjs_core_compiled_failure_bad_template(self):
         remember_cwd(self)
         chdir(self._env_root)
         build_dir = mkdtemp(self)
@@ -318,7 +329,6 @@ class SpecIntegrationTestCase(unittest.TestCase):
             plugin_sourcepath={
                 'text!mold/dummy/template.nja': src_template,
             },
-            transpile_sourcepath={},
             bundle_sourcepath={},
         )
         build_dir = mkdtemp(self)
@@ -333,7 +343,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
         self.assertIn(
             'Template render error: (mold/dummy/template.nja)', err)
 
-    def test_core_compiled_failure_missing_template(self):
+    def test_rjs_core_compiled_failure_missing_template(self):
         remember_cwd(self)
         chdir(self._env_root)
         build_dir = mkdtemp(self)
@@ -344,7 +354,6 @@ class SpecIntegrationTestCase(unittest.TestCase):
             plugin_sourcepath={
                 'text!nunja/dummy/no_such_template.nja': src_template,
             },
-            transpile_sourcepath={},
             bundle_sourcepath={},
         )
         build_dir = mkdtemp(self)
@@ -356,3 +365,84 @@ class SpecIntegrationTestCase(unittest.TestCase):
         err = stream.getvalue()
         self.assertIn('ERROR', err)
         self.assertIn('failed to precompile', err)
+
+    def test_webpack_core_compiled(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+
+        build_dir = mkdtemp(self)
+        src_template = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '_core_', '_default_wrapper_', 'template.nja'))
+
+        spec = Spec(
+            build_dir=build_dir,
+            loaderplugin_sourcepath={
+                'fake!bad': '/some/broken/path',
+                'text!_core_/_default_wrapper_/template.nja': src_template,
+                'text!some/template.nja': src_template,
+                'text!some/other/data.json': src_template,
+            },
+            bundle_sourcepath={
+                'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
+            },
+        )
+
+        webpack(spec, ())
+        hex_name = to_hex('_core_/_default_wrapper_')
+        precompiled_path = join(build_dir, hex_name + '.js')
+        self.assertFalse(exists(precompiled_path))
+        self.assertNotIn('slim', spec['bundle_sourcepath']['nunjucks'])
+
+        # now trigger the advice
+        spec.handle(BEFORE_COMPILE)
+        self.assertTrue(exists(precompiled_path))
+
+        with open(precompiled_path) as fd:
+            precompiled = fd.read()
+
+        core_path = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '__core__.js'))
+        with open(core_path) as fd:
+            core_compiled = fd.read()
+
+        # the compiled template should be identical with the one that
+        # is stored in this source tree for the core
+        self.assertEqual(precompiled, core_compiled)
+
+        self.assertEqual(
+            spec['bundle_sourcepath']['__nunja__/_core_/_default_wrapper_'],
+            precompiled_path,
+        )
+
+        # this one untouched.
+        self.assertEqual(spec['loaderplugin_sourcepath'], {
+            'fake!bad': '/some/broken/path',
+            'text!_core_/_default_wrapper_/template.nja': src_template,
+            # all other ones that did not pass the test will be filtered
+            # out for other processing
+            'text!some/template.nja': src_template,
+            'text!some/other/data.json': src_template,
+        })
+
+    def test_webpack_core_compiled_slim(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        src_template = resource_filename(Requirement.parse('nunja'), join(
+            'nunja', '_core_', '_default_wrapper_', 'template.nja'))
+        build_dir = mkdtemp(self)
+
+        spec = Spec(
+            build_dir=build_dir,
+            loaderplugin_sourcepath={
+                'text!_core_/_default_wrapper_/template.nja': src_template,
+            },
+            bundle_sourcepath={
+                'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
+            },
+        )
+        webpack(spec, ('slim',))
+        hex_name = to_hex('_core_/_default_wrapper_')
+        precompiled_path = join(build_dir, hex_name + '.js')
+        spec.handle(BEFORE_COMPILE)
+        self.assertIn('slim', spec['bundle_sourcepath']['nunjucks'])
+        self.assertTrue(exists(precompiled_path))
