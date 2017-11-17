@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import re
 
 from codecs import encode
 from collections import defaultdict
@@ -15,6 +16,8 @@ from calmjs.utils import json_dumps
 
 # TODO figure out where to stash this value
 NUNJA_PRECOMP_NS = '__nunja__'
+nunjucks_nja_patt = re.compile(
+    '^text!(?P<name>(?P<mold_id>[^!\\/]+\\/[^!\\/]+)\\/[^!]*\\.nja)$')
 
 logger = logging.getLogger(__name__)
 
