@@ -15,6 +15,7 @@ from calmjs.toolchain import BEFORE_COMPILE
 from calmjs.utils import pretty_logging
 from calmjs.utils import which
 
+from nunja.spec import nunjucks_nja_patt
 from nunja.spec import precompile_nunja
 from nunja.spec import rjs
 from nunja.spec import to_hex
@@ -31,6 +32,48 @@ class MiscTestCase(unittest.TestCase):
     def test_to_hex(self):
         self.assertEqual(to_hex(u'a'), u'61')
         self.assertEqual(to_hex(u'\u306a'), u'e381aa')
+
+
+class NameTestCase(unittest.TestCase):
+    """
+    Name matching tests.
+    """
+
+    def assertAllValid(self, f, values):
+        for value in values:
+            self.assertTrue(f(value), msg='%s should be valid' % value)
+            plugin, name = value.split('!')
+            mold_id = '/'.join(name.split('/', 2)[:2])
+            self.assertEqual(f(value).group('name'), name)
+            self.assertEqual(f(value).group('mold_id'), mold_id)
+
+    def assertAllInvalid(self, f, values):
+        for value in values:
+            self.assertFalse(f(value), msg='%s should be invalid' % value)
+
+    def test_valid_names(self):
+        valid = (
+            'text!nunja.mold/name/index.nja',
+            'text!nunja.mold/name/nested/index.nja',
+            'text!other/name/nested/template.nja',
+            'text!_core_/_default_wrapper_/template.nja',
+        )
+        self.assertAllValid(nunjucks_nja_patt.match, valid)
+
+    def test_invalid_names(self):
+        invalid = (
+            'text!//index.nja',
+            'text!somename//index.nja',
+            'text!/root/path/index.nja',
+            'text!text!nunja.mold/name/index.nja',
+            'text!css!nunja.mold/name/index.nja',
+            'css!nunja.mold/name/index.nja',
+            'text!nunja.mold/name/index.nja!strip',
+            'text!nunja.mold/template.nja',
+            'text!nunja/template.nja',
+            'text!/nunja/template.nja',
+        )
+        self.assertAllInvalid(nunjucks_nja_patt.match, invalid)
 
 
 class SpecTestCase(unittest.TestCase):
