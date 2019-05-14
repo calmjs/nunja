@@ -2,25 +2,18 @@ sudo: false
 matrix:
   allow_failures:
     - os: osx
-    - python: 3.7-dev
-    - python: pypy3.3-5.2-alpha1
-    - env: TRAVIS_NODE_VERSION=7
+    - python: 3.8-dev
   include:
     - language: python
       python: 2.7
       env:
-        - TRAVIS_NODE_VERSION=0.12
+        - TRAVIS_NODE_VERSION=8
         - BROWSER=PhantomJS
-    - language: python
-      python: 3.3
-      env:
-        - TRAVIS_NODE_VERSION=4.6
-        - BROWSER=Firefox
     - language: python
       dist: trusty
       python: 3.4
       env:
-        - TRAVIS_NODE_VERSION=4.6
+        - TRAVIS_NODE_VERSION=8
         - BROWSER=Chrome
       addons:
         apt:
@@ -31,28 +24,40 @@ matrix:
     - language: python
       python: 3.5
       env:
-        - TRAVIS_NODE_VERSION=6.9
+        - TRAVIS_NODE_VERSION=10
         - BROWSER=PhantomJS
     - language: python
       python: 3.6
       env:
-        - TRAVIS_NODE_VERSION=7
+        - TRAVIS_NODE_VERSION=10
         - BROWSER=PhantomJS
     - language: python
-      python: 3.7-dev
+      python: 3.7
+      dist: xenial
       env:
-        - TRAVIS_NODE_VERSION=7
+        - TRAVIS_NODE_VERSION=10
         - BROWSER=PhantomJS
+    - language: python
+      python: 3.8-dev
+      dist: xenial
+      env:
+        - TRAVIS_NODE_VERSION=12
+        - BROWSER=Chrome
+      addons:
+        apt:
+          sources:
+            - google-chrome
+          packages:
+            - google-chrome-stable
     - language: python
       python: pypy
       env:
-        - TRAVIS_NODE_VERSION=0.12
+        - TRAVIS_NODE_VERSION=8
         - BROWSER=Firefox
     - language: python
-      dist: trusty
-      python: pypy3.3-5.2-alpha1
+      python: pypy3
       env:
-        - TRAVIS_NODE_VERSION=6.9
+        - TRAVIS_NODE_VERSION=10
         - BROWSER=Chrome
       addons:
         apt:
@@ -62,23 +67,23 @@ matrix:
             - google-chrome-stable
     # test different versions of Node.js on osx
     - language: node_js
-      node_js: 4.6
+      node_js: 8
       os: osx
       env:
-        - TRAVIS_PYTHON_VERSION=3.4.5
+        - TRAVIS_PYTHON_VERSION=3.5.7
+        - BROWSER=Safari
+    - language: node_js
+      node_js: 10
+      os: osx
+      env:
+        - TRAVIS_PYTHON_VERSION=3.6.8
+        - BROWSER=Safari
+    - language: node_js
+      node_js: 12
+      os: osx
+      env:
+        - TRAVIS_PYTHON_VERSION=3.7.3
         - BROWSER=PhantomJS
-    - language: node_js
-      node_js: 6.9
-      os: osx
-      env:
-        - TRAVIS_PYTHON_VERSION=3.5.3
-        - BROWSER=Safari
-    - language: node_js
-      node_js: 7.4
-      os: osx
-      env:
-        - TRAVIS_PYTHON_VERSION=3.6.0
-        - BROWSER=Safari
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -105,14 +110,13 @@ before_install:
   - npm --version
 
 install:
-  - pip install nose coverage flake8
+  - pip install coverage flake8
   # install the required development dependencies as wheels first
-  - pip install calmjs.dev calmjs.rjs
-  - python setup.py develop
+  - pip install -e .[dev,rjs,webpack]
 
   # doing the env in this directory to save build time/bandwidth, as the
   # same environment will be used for both Python and JavaScript tests.
-  - calmjs npm --install nunja[dev] -w -D
+  - calmjs npm --install nunja[dev,rjs,webpack] -w -D
   # out-of-band installation of platform specific dependencies
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       npm install karma-safari-launcher ;
@@ -120,19 +124,12 @@ install:
   - export CALMJS_TEST_ENV=.
 script:
   - flake8 setup.py src
-  - nosetests --with-coverage --cover-package=nunja --with-doctest
+  - coverage run --include=src/* -m unittest nunja.tests.make_suite
 
   # generate bundle/tests
   - mkdir manual
-  # eslint 3 only works in nodejs 4+
-  - if [[ "$TRAVIS_NODE_VERSION" != "0.12" ]]; then
-      eslint "src/**/*.js" ;
-    fi
+  - ./node_modules/.bin/eslint "src/**/*.js"
   - calmjs karma -c --cover-test --browser=$BROWSER rjs nunja --build-dir=manual
-
-# Alternatively without nose
-#  - coverage run --include=src/* -m unittest nunja.tests.make_suite
-#  - coverage report -m
 
 # Slim, but testing molds
 #  - calmjs karma rjs nunja --source-registry=nunja.mold.tests,nunja.mold,calmjs.module --export-target=nunja.mold.tests.js --optional-advice=nunja[slim] -w

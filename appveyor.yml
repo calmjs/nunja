@@ -1,20 +1,20 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-      nodejs_version: "4.6"
+      nodejs_version: "8"
       BROWSER: "PhantomJS"
-    - PYTHON: "C:\\Python33"
-      nodejs_version: "4.6"
-      BROWSER: "Firefox"
     - PYTHON: "C:\\Python34"
-      nodejs_version: "6.9"
+      nodejs_version: "10"
       BROWSER: "PhantomJS"
     - PYTHON: "C:\\Python35"
-      nodejs_version: "6.9"
+      nodejs_version: "10"
       BROWSER: "Firefox"
     - PYTHON: "C:\\Python36"
-      nodejs_version: "7.4"
+      nodejs_version: "10"
       BROWSER: "IE"
+    - PYTHON: "C:\\Python37"
+      nodejs_version: "10"
+      BROWSER: "Firefox"
 matrix:
   allow_failures:
     - BROWSER: "IE"
@@ -27,11 +27,12 @@ install:
   - virtualenv --clear venv
   - "venv\\Scripts\\activate.bat"
 
-  - pip install coverage calmjs.dev calmjs.rjs
+  - pip install coverage
+  - pip install -e .[dev,rjs,webpack]
   - python setup.py develop
 
   # doing the env in this directory to save build time/bandwidth
-  - calmjs npm --install nunja calmjs.dev -w -D
+  - calmjs npm --install nunja[dev,rjs,webpack] -w -D
   - npm install karma-ie-launcher
   - "SET CALMJS_TEST_ENV=."
 
