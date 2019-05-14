@@ -95,7 +95,7 @@ class MoldRegistryTestCase(unittest.TestCase):
             'nunja.mold': [
                 'nunja.testing.molds = nunja.testing:mold',
             ]},
-            dist=Distribution(project_name='nunjatesting')
+            dist=Distribution(project_name='nunjatesting', version='0.0')
         )
 
         with pretty_logging(logger='nunja', stream=mocks.StringIO()) as stream:
@@ -198,7 +198,7 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         working_set = mocks.WorkingSet(
             {'nunja.mold': entry_points},
-            dist=Distribution(project_name='nunjatesting')
+            dist=Distribution(project_name='nunjatesting', version='0.0')
         )
         return MoldRegistry.create(_working_set=working_set)
 
@@ -294,7 +294,7 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         working_set = mocks.WorkingSet(
             {'nunja.mold': entry_points},
-            dist=Distribution(project_name='nunjatesting')
+            dist=Distribution(project_name='nunjatesting', version='0.0')
         )
 
         registry = MoldRegistry.create(
@@ -321,13 +321,13 @@ class MoldRegistryTestCase(unittest.TestCase):
         tmpdir = mkdtemp_singleton(self)
         tmp_entry_point = registry.tracked_entry_points['tmp']
         self.assertEqual(registry._entry_point_to_path(tmp_entry_point), join(
-            tmpdir, 'root'))
+            tmpdir, 'tmp', 'root'))
 
         # Using the API quickly
         self.assertEqual(registry.mold_id_to_path('tmp/mold'), join(
-            tmpdir, 'root', 'mold'))
+            tmpdir, 'tmp', 'root', 'mold'))
         self.assertEqual(registry.mold_id_to_path('tmp/new_mold'), join(
-            tmpdir, 'root', 'new_mold'))
+            tmpdir, 'tmp', 'root', 'new_mold'))
 
         with self.assertRaises(KeyError):
             registry.mold_id_to_path('no_such_entry/point')
@@ -347,7 +347,7 @@ class MoldRegistryTestCase(unittest.TestCase):
         self.assertEqual(main_template, path)
 
         tmpdir = mkdtemp_singleton(self)
-        mold_root = join(tmpdir, 'root')
+        mold_root = join(tmpdir, 'tmp', 'root')
         mold_base = join(mold_root, 'new_mold')
         mkdir(mold_base)
         path = registry.lookup_path('tmp/new_mold/template.nja')

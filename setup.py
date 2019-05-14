@@ -54,7 +54,7 @@ setup(
     calmjs_module_registry=['calmjs.module', 'nunja.mold'],
     install_requires=[
         'Jinja2>=2.4',
-        'calmjs>=3.0.0dev',
+        'calmjs>=3.1.0',
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
     extras_require={

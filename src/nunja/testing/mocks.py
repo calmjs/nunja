@@ -7,10 +7,8 @@ from types import ModuleType
 
 import pkg_resources
 from pkg_resources import resource_filename
-from pkg_resources import Distribution
 from pkg_resources import Requirement
 
-from calmjs.testing.mocks import WorkingSet
 from calmjs.testing.utils import mkdtemp_singleton
 from calmjs.testing.utils import make_dummy_dist
 
@@ -26,7 +24,12 @@ class MockResourceManager(object):
     def __init__(self, module_path_map):
         self.module_path_map = module_path_map
 
-    def resource_filename(self, module_name, path):
+    def resource_filename(self, package_or_requirement, path):
+        module_name = (
+            package_or_requirement.name
+            if isinstance(package_or_requirement, Requirement) else
+            package_or_requirement
+        )
         result = self.module_path_map.get(module_name)
         if result is None:
             return resource_filename(module_name, path)
@@ -49,10 +52,7 @@ def stub_mod_mock_resources_filename(testcase_inst, module, module_path_map):
 
 
 def setup_tmp_module(testcase_inst, modname='tmp'):
-    def cleanup():
-        sys.modules.pop(modname)
-
-    testcase_inst.addCleanup(cleanup)
+    testcase_inst.addCleanup(sys.modules.pop, modname)
     # inject the dummy tmp module to sidestep the import error.
     sys.modules[modname] = ModuleType(modname)
 
@@ -67,25 +67,37 @@ def setup_tmp_mold_templates(testcase_inst):
 
     tempdir = mkdtemp_singleton(testcase_inst)
 
-    # using nunja.testing as a surrogate module
-    working_set = WorkingSet({
-        'nunja.mold': [
+    make_dummy_dist(testcase_inst, (
+        ('entry_points.txt', '\n'.join([
+            '[nunja.mold]',
             'tmp = tmp:root',
-            '_core_ = nunja:_core_',
-        ]},
-        dist=Distribution(project_name='nunjatesting')
+        ])),
+    ), 'nunjatesting', '0.0')
+
+    working_set = pkg_resources.WorkingSet([
+        testcase_inst._calmjs_testing_tmpdir])
+    # add the real nunja to provide the data.
+    working_set.add(
+        pkg_resources.get_distribution('nunja'),
     )
+
     module_map = {
         'tmp': tempdir,
+        'nunjatesting': tempdir,
         # include this module, too
-        'nunja': resource_filename(Requirement.parse('nunja'), 'nunja'),
+        'nunja': resource_filename(Requirement.parse('nunja'), ''),
     }
     setup_tmp_module(testcase_inst)
+    # also provide one for nunjatesting
+    setup_tmp_module(testcase_inst, 'nunjatesting')
 
     # Stub out the indexer so it would pick up our dummy files here
     stub_mod_mock_resources_filename(testcase_inst, pkg_resources, module_map)
 
-    moldroot = join(tempdir, 'root')
+    module_root = join(tempdir, 'tmp')
+    mkdir(module_root)
+
+    moldroot = join(module_root, 'root')
     mkdir(moldroot)
 
     molddir = join(moldroot, 'mold')
@@ -152,5 +164,13 @@ def setup_testing_mold_templates_registry(testcase_inst):
 
     working_set = pkg_resources.WorkingSet([
         testcase_inst._calmjs_testing_tmpdir])
+
+    # Ensure that both the "stubbed" modules can be found
+    stub_mod_mock_resources_filename(testcase_inst, pkg_resources, {
+        'nunja': resource_filename(
+            Requirement.parse('nunja'), ''),
+        'nunja.testing': resource_filename(
+            Requirement.parse('nunja'), ''),
+    })
 
     return MoldRegistry('nunja.mold', _working_set=working_set)

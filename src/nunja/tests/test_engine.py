@@ -67,6 +67,13 @@ class EngineTestCase(unittest.TestCase):
             '}</div>'
         ))
 
+
+class EngineWithTestingMoldTestCase(unittest.TestCase):
+    """
+    The core engine test case for testing the integration with the
+    loader with the testing mold.
+    """
+
     def test_fetch_path_itemlist(self):
         registry = mocks.setup_testing_mold_templates_registry(self)
         engine = Engine(registry)
