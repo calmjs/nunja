@@ -41,7 +41,9 @@ test_script:
   - coverage report -m
 
   # for the JS
-  - calmjs karma -c --cover-test --browser=%BROWSER% rjs nunja
+  - calmjs karma -c --cover-test --browser=%BROWSER%
+      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.tests
+      rjs nunja
 
 artifacts:
   - path: dist\*

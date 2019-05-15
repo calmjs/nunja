@@ -129,7 +129,9 @@ script:
   # generate bundle/tests
   - mkdir manual
   - ./node_modules/.bin/eslint "src/**/*.js"
-  - calmjs karma -c --cover-test --browser=$BROWSER rjs nunja --build-dir=manual
+  - calmjs karma -c --cover-test --browser=$BROWSER
+      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.tests
+      rjs nunja --build-dir=manual
 
 # Slim, but testing molds
 #  - calmjs karma rjs nunja --source-registry=nunja.mold.tests,nunja.mold,calmjs.module --export-target=nunja.mold.tests.js --optional-advice=nunja[slim] -w

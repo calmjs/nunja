@@ -77,6 +77,7 @@ setup(
         'calmjs.registry': [
             'nunja.mold = nunja.registry:MoldRegistry',
             'nunja.mold.tests = nunja.registry:MoldRegistry',
+            'nunja.rjs.tests = calmjs.module:ModuleRegistry',
         ],
         'calmjs.module': [
             'nunja = nunja',
@@ -86,6 +87,9 @@ setup(
         ],
         'calmjs.module.tests': [
             'nunja.tests = nunja.tests',
+        ],
+        'nunja.rjs.tests': [
+            'nunja.tests.rjs = nunja.tests.rjs',
         ],
         'nunja.mold': [
             '_core_ = nunja:_core_',
