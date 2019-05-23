@@ -107,11 +107,18 @@ def precompile_nunja_rjs(spec, slim=False):
 
 
 def rjs(spec, extras):
+    if 'raw' in extras:
+        logger.debug(
+            'nunja will be skipping precompilation for rjs toolchain')
+        return
     slim = 'slim' in extras
     spec.advise(BEFORE_COMPILE, precompile_nunja_rjs, spec, slim)
 
 
 def webpack(spec, extras):
+    if 'raw' in extras:
+        logger.warning(
+            'nunja cannot skip precompilation for webpack toolchain')
     slim = 'slim' in extras
     spec.advise(
         BEFORE_COMPILE, precompile_nunja,

@@ -54,7 +54,7 @@ setup(
     calmjs_module_registry=['calmjs.module', 'nunja.mold'],
     install_requires=[
         'Jinja2>=2.4',
-        'calmjs>=3.1.0',
+        'calmjs>=3.4.1',
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
     extras_require={
@@ -101,6 +101,14 @@ setup(
         'calmjs.toolchain.advice': [
             'calmjs.rjs.toolchain:RJSToolchain = nunja.spec:rjs',
             'calmjs.webpack.toolchain:WebpackToolchain = nunja.spec:webpack',
+        ],
+        # note that under the current implementation, dependent packages
+        # that provide templates should declare this such that templates
+        # will be optimised by default, and to enable compatibility
+        # between the different supported toolchains (i.e. support both
+        # webpack and requirejs).
+        'calmjs.toolchain.advice.apply': [
+            'nunja = nunja',
         ],
     },
     test_suite="nunja.tests.make_suite",
