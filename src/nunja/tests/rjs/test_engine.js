@@ -38,6 +38,7 @@ describe('nunja/engine simple test case', function() {
             'env': this.env,
             'registry': this.registry,
         });
+        this.dummy_mold_index = 'dummy/mold/index';
         window.nunjucksPrecompiled["dummy/mold/template.nja"] = (
             function() { function root(env, context, frame, runtime, cb) {
                 var output = "dummy";
@@ -54,7 +55,7 @@ describe('nunja/engine simple test case', function() {
         delete window.nunjucksPrecompiled['dummy/mold/template.nja'];
         requirejs.undef('text!check/template.nja');
         requirejs.undef('text!dummy/mold/template.nja');
-        requirejs.undef('dummy/mold/index');
+        requirejs.undef(this.dummy_mold_index);
         this.clock.restore();
         document.body.innerHTML = "";
     });
@@ -93,7 +94,7 @@ describe('nunja/engine simple test case', function() {
         // running the test within the error handler to ensure the
         // error handler actually gets executed.
         var self = this;
-        require(['dummy/mold/index'], function() {}, function() {
+        require([this.dummy_mold_index], function() {}, function() {
             self.engine.populate(element, {});
             self.clock.tick(500);
             expect(document.body.innerHTML).to.equal(
@@ -108,12 +109,12 @@ describe('nunja/engine simple test case', function() {
         document.body.innerHTML = '<div data-nunja="dummy/mold"></div>';
         var element = $('div')[0];
         var called = false;
-        define('dummy/mold/index', [], function () {
+        define(this.dummy_mold_index, [], function () {
             return {'init': function() {
                 called = true;
             }};
         });
-        require(['dummy/mold/index'], function() {});
+        require([this.dummy_mold_index], function() {});
         this.clock.tick(500);
         this.engine.populate(element, {});
         this.clock.tick(500);

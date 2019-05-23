@@ -3,12 +3,20 @@
 var core = require('nunja/core');
 var nunjucks = require('nunjucks');
 
+var nunja_testing_mold_basic = null;
+
+try {
+    nunja_testing_mold_basic = require('__nunja__/nunja.testing.mold/basic');
+} catch (e) {
+    null;
+}
+
 window.mocha.setup('bdd');
 
 /* istanbul ignore next */
 var describe_ = ((
         (nunjucks.compiler.compile !== undefined) ||
-        (requirejs.defined('__nunja__/nunja.testing.mold/basic'))
+        (nunja_testing_mold_basic !== null)
     ) ? describe : describe.skip);
 
 
