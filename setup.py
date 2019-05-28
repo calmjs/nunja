@@ -59,7 +59,7 @@ setup(
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
     extras_require={
         'dev': [
-            'calmjs.dev>=2.0.0dev',
+            'calmjs.dev>=2.3.0',
         ],
         'rjs': [
              'calmjs.rjs',
@@ -75,9 +75,15 @@ setup(
     },
     entry_points={
         'calmjs.registry': [
+            # The main mold registry.
             'nunja.mold = nunja.registry:MoldRegistry',
-            'nunja.mold.tests = nunja.registry:MoldRegistry',
+            # The registry for the tests written originally that are
+            # very tightly coupled with the RequireJS module framework.
             'nunja.rjs.tests = calmjs.module:ModuleRegistry',
+            # Additional mold registry for the specification for
+            # supplementary molds that may be used for testing for a
+            # given package; should not contain actual tests.
+            'nunja.mold.testing = nunja.registry:MoldRegistry',
         ],
         'calmjs.module': [
             'nunja = nunja',
@@ -95,7 +101,7 @@ setup(
             '_core_ = nunja:_core_',
             'nunja.molds = nunja:molds',
         ],
-        'nunja.mold.tests': [
+        'nunja.mold.testing': [
             'nunja.testing.mold = nunja.testing:mold',
         ],
         'calmjs.toolchain.advice': [

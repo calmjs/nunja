@@ -1,37 +1,32 @@
 'use strict';
 
 var core = require('nunja/core');
-var nunjucks = require('nunjucks');
 
-var nunja_testing_mold_basic = null;
-
-try {
-    nunja_testing_mold_basic = require('__nunja__/nunja.testing.mold/basic');
-} catch (e) {
-    null;
-}
+/* istanbul ignore next */
+var nunja_testing_mold_skip = (function() {
+    try {
+        require('__nunja__/nunja.testing.mold/basic');
+    } catch (e) {
+        try {
+            require('text!nunja.testing.mold/basic/template.nja');
+        } catch(e) {
+            console.log(
+                "nunja/core/tests/test_core " +
+                "requires resources from the 'nunja.mold.testing' registry " +
+                "must be made available as part of the source registries"
+            );
+            return function(self) { self.skip(); };
+        }
+    }
+    return function(){};
+})();
 
 window.mocha.setup('bdd');
 
-/* istanbul ignore next */
-var describe_ = ((
-        (nunjucks.compiler.compile !== undefined) ||
-        (nunja_testing_mold_basic !== null)
-    ) ? describe : describe.skip);
 
-
-/* istanbul ignore next */
-if (describe_ === describe.skip) {
-    console.log(
-        'resources from the nunja.mold.tests registry unavailable for use: ' +
-        'the nunjucks compiler is unavailable or they are not available as ' +
-        'precompiled templates; tests will be skipped'
-    );
-}
-
-
-describe_('Engine template core rendering', function() {
+describe('Engine template core rendering', function() {
     beforeEach(function() {
+        nunja_testing_mold_skip(this);
         this.engine = core.engine;
     });
 
@@ -56,8 +51,9 @@ describe_('Engine template core rendering', function() {
 });
 
 
-describe_('Engine main script loading error cases', function() {
+describe('Engine main script loading error cases', function() {
     beforeEach(function() {
+        nunja_testing_mold_skip(this);
         this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
     });
@@ -85,8 +81,9 @@ describe_('Engine main script loading error cases', function() {
 
 });
 
-describe_('Engine main script loading and ui hooks', function() {
+describe('Engine main script loading and ui hooks', function() {
     beforeEach(function() {
+        nunja_testing_mold_skip(this);
         this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
         // create new root element to aid cleanup.
@@ -292,8 +289,9 @@ describe_('Engine main script loading and ui hooks', function() {
 
 });
 
-describe_('Support of imported template by data', function() {
+describe('Support of imported template by data', function() {
     beforeEach(function() {
+        nunja_testing_mold_skip(this);
         this.clock = sinon.useFakeTimers();
         this.engine = core.engine;
         // create new root element to aid cleanup.

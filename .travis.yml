@@ -129,14 +129,38 @@ script:
   # generate bundle/tests
   - mkdir manual
   - ./node_modules/.bin/eslint "src/**/*.js"
-  - calmjs karma -c --cover-test --browser=$BROWSER
-      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.tests
-      rjs nunja --build-dir=manual
 
-# Slim, but testing molds
+  # The standard style tests, though we need the additional source
+  # registries from nunja.mold.testing so that those templates there
+  # will be bundled into the artifact.
+
+  # RequireJS
+  - calmjs karma -T -c --cover-test --browser=$BROWSER
+      rjs -w
+        nunja --source-registries=calmjs.module,nunja.mold,nunja.mold.testing
+  # Webpack
+  - calmjs karma -T -c --cover-test --browser=$BROWSER
+      webpack -w
+        nunja --source-registries=calmjs.module,nunja.mold,nunja.mold.testing
+
+  # This test using the RequireJS build toolchain which include tests
+  # against the path that make heavy use of the async mold/template
+  # loading feature; note the inclusion of the nunja.mold.testing as
+  # a test registry to only make those names available.  This was the
+  # original test suite developed as part of the initial development
+  # during mid-2016.
+  # Also note the usage of --build-dir=manual for the source maps.
+  - calmjs karma -T -c --cover-test --browser=$BROWSER
+      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.testing
+      rjs nunja --optional-advice=nunja[raw] --build-dir=manual
+
+# Slim, but building an artifact that can be used to test the molds.
 #  - calmjs karma rjs nunja --source-registry=nunja.mold.tests,nunja.mold,calmjs.module --export-target=nunja.mold.tests.js --optional-advice=nunja[slim] -w
 # Then test the thing through the standalone runner
 #  - calmjs karma run --artifact=nunja.mold.tests.js -t calmjs.rjs nunja
+
+# need one more that generates the standard artifact, with a runner that
+# invokes karma with the additional artifact.
 
 after_success:
   - coverage report -m

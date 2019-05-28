@@ -29,10 +29,10 @@ install:
 
   - pip install coverage
   - pip install -e .[dev,rjs,webpack]
-  - python setup.py develop
 
   # doing the env in this directory to save build time/bandwidth
   - calmjs npm --install nunja[dev,rjs,webpack] -w -D
+  # also manually install the MSIE launcher.
   - npm install karma-ie-launcher
   - "SET CALMJS_TEST_ENV=."
 
@@ -40,10 +40,28 @@ test_script:
   - coverage run -m unittest nunja.tests.make_suite
   - coverage report -m
 
-  # for the JS
-  - calmjs karma -c --cover-test --browser=%BROWSER%
-      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.tests
-      rjs nunja
+  # The standard style tests, though we need the additional source
+  # registries from nunja.mold.testing so that those templates there
+  # will be bundled into the artifact.
+
+  # RequireJS
+  - calmjs karma -T -c --cover-test --browser=%BROWSER%
+      rjs -w
+        nunja --source-registries=calmjs.module,nunja.mold,nunja.mold.testing
+  # Webpack
+  - calmjs karma -T -c --cover-test --browser=%BROWSER%
+      webpack -w
+        nunja --source-registries=calmjs.module,nunja.mold,nunja.mold.testing
+
+  # This test using the RequireJS build toolchain which include tests
+  # against the path that make heavy use of the async mold/template
+  # loading feature; note the inclusion of the nunja.mold.testing as
+  # a test registry to only make those names available.  This was the
+  # original test suite developed as part of the initial development
+  # during mid-2016.
+  - calmjs karma -T -c --cover-test --browser=%BROWSER%
+      --test-registry=calmjs.module.tests,nunja.rjs.tests,nunja.mold.testing
+      rjs nunja --optional-advice=nunja[raw]
 
 artifacts:
   - path: dist\*
