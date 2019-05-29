@@ -63,11 +63,14 @@ Engine.prototype.query_template = function (name) {
     */
 
     // Two places that the template can be loaded: either through the
-    // window.nunjucksPrecompiled or in the requirejs framework.
+    // window.nunjucksPrecompiled or in the requirejs framework, if
+    // available.
 
     return (
-        (name in window.nunjucksPrecompiled) ||
-        requirejs.defined('text!' + name)
+        (name in window.nunjucksPrecompiled) || (
+            typeof requirejs !== "undefined" &&
+            requirejs.defined('text!' + name)
+        )
     );
 };
 
