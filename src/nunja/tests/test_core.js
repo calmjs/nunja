@@ -1,6 +1,8 @@
 'use strict';
 
+var loader = require('nunja/loader');
 var core = require('nunja/core');
+var registry = require('nunja/registry');
 
 /* istanbul ignore next */
 var nunja_testing_mold_skip = (function() {
@@ -22,6 +24,35 @@ var nunja_testing_mold_skip = (function() {
 })();
 
 window.mocha.setup('bdd');
+
+
+describe('nunja/loader sync path test case', function() {
+    // follows the synchronous path
+
+    beforeEach(function() {
+        nunja_testing_mold_skip(this);
+        this.registry = new registry.Registry();
+        this.loader = new loader.NunjaLoader(this.registry);
+    });
+
+    it('test getSource sync with callback', function() {
+        // assuming the sources are available (either compiled in or
+        // available via RequireJS.
+        var result;
+        var callback = function(err, value) {
+            result = value;
+        };
+
+        this.loader.getSource(
+            'nunja.testing.mold/basic/template.nja', callback);
+
+        expect(result['src']).to.equal(
+            '<span>{{ value }}</span>\n');
+        expect(result['path']).to.equal(
+            'nunja.testing.mold/basic/template.nja');
+    });
+
+});
 
 
 describe('Engine template core rendering', function() {
