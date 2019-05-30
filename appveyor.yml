@@ -1,7 +1,7 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-      nodejs_version: "8"
+      nodejs_version: "10"
       BROWSER: "PhantomJS"
     - PYTHON: "C:\\Python34"
       nodejs_version: "10"
