@@ -215,4 +215,20 @@ describe('nunja/loader sync path test case', function() {
         expect(result['path']).to.equal('mock.molds/loadersync/template.nja');
     });
 
+    it('test Simple getSource sync', function() {
+        var result;
+        var callback = function(err, value) {
+            result = value;
+        };
+
+        var simple_loader = new loader.SimpleLoader(this.registry);
+        simple_loader.getSource(
+            'nunja.testing.mold/basic/template.nja', callback);
+
+        expect(result['src']).to.equal(
+            '<span>{{ value }}</span>\n');
+        expect(result['path']).to.equal(
+            'nunja.testing.mold/basic/template.nja');
+    });
+
 });
