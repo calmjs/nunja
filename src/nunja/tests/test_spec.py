@@ -230,6 +230,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
                 'text!_core_/_default_wrapper_/template.nja': src_template,
                 'text!some/template.nja': src_template,
                 'text!some/other/data.json': src_template,
+                'text!some/mold/template.nja': src_template,
             },
             bundle_sourcepath={
                 'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
@@ -262,6 +263,8 @@ class SpecIntegrationTestCase(unittest.TestCase):
             spec['bundle_sourcepath']['__nunja__/_core_/_default_wrapper_'],
             precompiled_path,
         )
+        # mold paths will be precompiled by default now
+        self.assertIn('__nunja__/some/mold', spec['bundle_sourcepath'])
 
         # this one untouched.
         self.assertEqual(spec['plugin_sourcepath'], {
@@ -270,6 +273,7 @@ class SpecIntegrationTestCase(unittest.TestCase):
             # all other ones that did not pass the test will be filtered
             # out for other processing
             'text!some/template.nja': src_template,
+            'text!some/mold/template.nja': src_template,
             'text!some/other/data.json': src_template,
         })
 
@@ -300,6 +304,40 @@ class SpecIntegrationTestCase(unittest.TestCase):
                 'exports': 'nunjucksPrecompiled'
             },
         }, spec['shim'])
+
+    def test_rjs_core_compiled_raw(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        build_dir = mkdtemp(self)
+
+        src_dir = mkdtemp(self)
+        src_template = join(src_dir, 'template.nja')
+        with open(src_template, 'w') as fd:
+            fd.write('<p>Hello, {name}</p>')
+
+        spec = Spec(
+            build_dir=build_dir,
+            plugin_sourcepath={
+                'text!some/mold/template.nja': src_template,
+            },
+            bundle_sourcepath={
+                'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
+            },
+        )
+        with pretty_logging('nunja', stream=StringIO()) as stream:
+            rjs(spec, ('raw'))
+        # now trigger the advice
+        spec.handle(BEFORE_COMPILE)
+        # template remains in plugins
+        self.assertEqual(spec['plugin_sourcepath'], {
+            'text!some/mold/template.nja': src_template,
+        })
+        # will not be applied in raw.
+        self.assertNotIn('__nunja__/some/mold', spec['bundle_sourcepath'])
+        self.assertIn(
+            'nunja will be skipping precompilation for rjs toolchain',
+            stream.getvalue(),
+        )
 
     def test_rjs_core_compiled_slim_empty_case(self):
         remember_cwd(self)
@@ -446,3 +484,37 @@ class SpecIntegrationTestCase(unittest.TestCase):
         spec.handle(BEFORE_COMPILE)
         self.assertIn('slim', spec['bundle_sourcepath']['nunjucks'])
         self.assertTrue(exists(precompiled_path))
+
+    def test_webpack_core_compiled_raw(self):
+        remember_cwd(self)
+        chdir(self._env_root)
+        build_dir = mkdtemp(self)
+
+        src_dir = mkdtemp(self)
+        src_template = join(src_dir, 'template.nja')
+        with open(src_template, 'w') as fd:
+            fd.write('<p>Hello, {name}</p>')
+
+        spec = Spec(
+            build_dir=build_dir,
+            loaderplugin_sourcepath={
+                'text!some/mold/template.nja': src_template,
+            },
+            bundle_sourcepath={
+                'nunjucks': join('node_modules', 'nunjucks', 'nunjucks.js'),
+            },
+        )
+        with pretty_logging('nunja', stream=StringIO()) as stream:
+            webpack(spec, ('raw'))
+        # now trigger the advice
+        spec.handle(BEFORE_COMPILE)
+        # template remains in plugins
+        self.assertEqual(spec['loaderplugin_sourcepath'], {
+            'text!some/mold/template.nja': src_template,
+        })
+        # will not be applied in raw.
+        self.assertIn('__nunja__/some/mold', spec['bundle_sourcepath'])
+        self.assertIn(
+            'nunja cannot skip precompilation for webpack toolchain',
+            stream.getvalue(),
+        )

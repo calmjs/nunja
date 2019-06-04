@@ -102,5 +102,7 @@ RequireJSLoader.prototype.getSource = function(name, callback) {
 exports.SimpleLoader = SimpleLoader;
 exports.RequireJSLoader = RequireJSLoader;
 // the "default" loader under the "default" name.
+
+/* istanbul ignore next */
 exports.NunjaLoader = (
     typeof requirejs === "undefined" ? SimpleLoader: RequireJSLoader);
