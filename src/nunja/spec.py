@@ -9,7 +9,13 @@ from os.path import join
 
 from calmjs.cli import node
 from calmjs.exc import AdviceAbort
-from calmjs.rjs.dist import EMPTY
+
+try:
+    from calmjs.rjs.dist import EMPTY
+except ImportError:  # pragma: no cover
+    # just define it here...
+    EMPTY = 'empty:'
+
 from calmjs.toolchain import BEFORE_COMPILE
 from calmjs.toolchain import BUILD_DIR
 from calmjs.utils import json_dumps
