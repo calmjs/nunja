@@ -3,10 +3,10 @@
 <head>
 <title>{{ title }}</title>
 {% for src in js -%}
-  <script type="text/javascript" src="{{ src }}"></script>
+  <script type="text/javascript" src="{{ artifact_root }}{{ src }}"></script>
 {% endfor %}
 {% for src in css -%}
-  <link href="{{ src }}" rel="stylesheet" type="text/css" />
+  <link href="{{ artifact_root }}{{ src }}" rel="stylesheet" type="text/css" />
 {%- endfor %}
 </head>
 <body>
