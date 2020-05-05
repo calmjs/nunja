@@ -2,7 +2,7 @@ sudo: false
 matrix:
   allow_failures:
     - os: osx
-    - python: 3.8-dev
+    - python: 3.9-dev
   include:
     - language: python
       python: 2.7
@@ -16,11 +16,7 @@ matrix:
         - TRAVIS_NODE_VERSION=8
         - BROWSER=Chrome
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
     - language: python
       python: 3.5
       env:
@@ -38,17 +34,21 @@ matrix:
         - TRAVIS_NODE_VERSION=10
         - BROWSER=PhantomJS
     - language: python
-      python: 3.8-dev
+      python: 3.8
       dist: xenial
       env:
         - TRAVIS_NODE_VERSION=12
         - BROWSER=Chrome
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
+    - language: python
+      python: 3.9-dev
+      dist: xenial
+      env:
+        - TRAVIS_NODE_VERSION=12
+        - BROWSER=Chrome
+      addons:
+        chrome: stable
     - language: python
       python: pypy
       env:
@@ -60,11 +60,7 @@ matrix:
         - TRAVIS_NODE_VERSION=10
         - BROWSER=Chrome
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
     # test different versions of Node.js on osx
     - language: node_js
       node_js: 8
