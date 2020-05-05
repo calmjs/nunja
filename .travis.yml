@@ -2,7 +2,7 @@ sudo: false
 matrix:
   allow_failures:
     - os: osx
-    - python: 3.8-dev
+    - python: 3.9-dev
   include:
     - language: python
       python: 2.7
@@ -16,11 +16,7 @@ matrix:
         - TRAVIS_NODE_VERSION=8
         - BROWSER=Chrome
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
     - language: python
       python: 3.5
       env:
@@ -28,28 +24,34 @@ matrix:
         - BROWSER=PhantomJS
     - language: python
       python: 3.6
+      dist: trusty
       env:
         - TRAVIS_NODE_VERSION=10
-        - BROWSER=PhantomJS
+        - BROWSER=Firefox
     - language: python
       python: 3.7
       dist: xenial
       env:
-        - TRAVIS_NODE_VERSION=10
+        - TRAVIS_NODE_VERSION=12
         - BROWSER=PhantomJS
     - language: python
-      python: 3.8-dev
-      dist: xenial
+      python: 3.8
+      dist: bionic
       env:
         - TRAVIS_NODE_VERSION=12
-        - BROWSER=Chrome
+        - BROWSER=PhantomJS
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
     - language: python
+      python: 3.9-dev
+      dist: xenial
+      env:
+        - TRAVIS_NODE_VERSION=14
+        - BROWSER=PhantomJS
+      addons:
+        chrome: stable
+    - language: python
+      dist: trusty
       python: pypy
       env:
         - TRAVIS_NODE_VERSION=8
@@ -58,13 +60,9 @@ matrix:
       python: pypy3
       env:
         - TRAVIS_NODE_VERSION=10
-        - BROWSER=Chrome
+        - BROWSER=PhantomJS
       addons:
-        apt:
-          sources:
-            - google-chrome
-          packages:
-            - google-chrome-stable
+        chrome: stable
     # test different versions of Node.js on osx
     - language: node_js
       node_js: 8
@@ -105,6 +103,7 @@ before_install:
       (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags` );
       source ~/.nvm/nvm.sh ;
       nvm install "$TRAVIS_NODE_VERSION" ;
+      firefox --version ;
     fi
   - node --version
   - npm --version

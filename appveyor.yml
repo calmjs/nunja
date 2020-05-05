@@ -1,20 +1,28 @@
 environment:
   matrix:
-    - PYTHON: "C:\\Python27"
-      nodejs_version: "10"
-      BROWSER: "PhantomJS"
-    - PYTHON: "C:\\Python34"
-      nodejs_version: "10"
-      BROWSER: "PhantomJS"
-    - PYTHON: "C:\\Python35"
-      nodejs_version: "10"
-      BROWSER: "Firefox"
+    # Commenting out due to setuptools on Appveyor for Python 2 is
+    # updated beyond the final Python 2 supported version.
+    # - PYTHON: "C:\\Python27"
+    #   nodejs_version: "10"
+    #   BROWSER: "PhantomJS"
+
+    # Not supported again it seems?
+    # - PYTHON: "C:\\Python34"
+    #   nodejs_version: "10"
+    #   BROWSER: "PhantomJS"
+    # - PYTHON: "C:\\Python35"
+    #   nodejs_version: "10"
+    #   BROWSER: "Firefox"
+
     - PYTHON: "C:\\Python36"
       nodejs_version: "10"
-      BROWSER: "IE"
+      BROWSER: "Firefox"
     - PYTHON: "C:\\Python37"
       nodejs_version: "10"
-      BROWSER: "Firefox"
+      BROWSER: "IE"
+    - PYTHON: "C:\\Python38"
+      nodejs_version: "10"
+      BROWSER: "PhantomJS"
 matrix:
   allow_failures:
     - BROWSER: "IE"
@@ -38,7 +46,7 @@ install:
 
 test_script:
   - coverage run -m unittest nunja.tests.make_suite
-  - coverage report -m
+  - coverage report -m -i
 
   # The standard style tests, though we need the additional source
   # registries from nunja.mold.testing so that those templates there
