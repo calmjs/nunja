@@ -24,9 +24,10 @@ matrix:
         - BROWSER=PhantomJS
     - language: python
       python: 3.6
+      dist: trusty
       env:
         - TRAVIS_NODE_VERSION=10
-        - BROWSER=PhantomJS
+        - BROWSER=Firefox
     - language: python
       python: 3.7
       dist: xenial
@@ -35,10 +36,10 @@ matrix:
         - BROWSER=PhantomJS
     - language: python
       python: 3.8
-      dist: xenial
+      dist: bionic
       env:
         - TRAVIS_NODE_VERSION=12
-        - BROWSER=Chrome
+        - BROWSER=PhantomJS
       addons:
         chrome: stable
     - language: python
@@ -46,10 +47,11 @@ matrix:
       dist: xenial
       env:
         - TRAVIS_NODE_VERSION=12
-        - BROWSER=Chrome
+        - BROWSER=PhantomJS
       addons:
         chrome: stable
     - language: python
+      dist: trusty
       python: pypy
       env:
         - TRAVIS_NODE_VERSION=8
@@ -58,7 +60,7 @@ matrix:
       python: pypy3
       env:
         - TRAVIS_NODE_VERSION=10
-        - BROWSER=Chrome
+        - BROWSER=PhantomJS
       addons:
         chrome: stable
     # test different versions of Node.js on osx
@@ -93,6 +95,7 @@ before_install:
       python -m pip install --user virtualenv ;
       python -m virtualenv ~/.venv ;
       source ~/.venv/bin/activate ;
+      firefox --version ;
     else
       export DISPLAY=:99.0 ;
       sh -e /etc/init.d/xvfb start ;
