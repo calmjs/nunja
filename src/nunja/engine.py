@@ -9,7 +9,9 @@ from calmjs.registry import get
 from nunja.registry import REQ_TMPL_NAME
 from nunja.registry import DEFAULT_WRAPPER_NAME
 from nunja.registry import DEFAULT_REGISTRY_NAME
+from nunja.registry import JINJA_TEMPLATE_REGISTRY_NAME
 from nunja.registry import MoldRegistry
+from nunja.registry import JinjaTemplateRegistry
 from nunja.loader import NunjaLoader
 
 
@@ -128,4 +130,71 @@ class Engine(object):
         """
 
         template = self.load_mold(mold_id)
+        return template.render(**data)
+
+
+class JinjaEngine(object):
+    """
+    Jinja only engine.
+
+    This takes a jinja template registry for use of loading and
+    rendering of templates.
+    """
+
+    def __init__(self, registry=JINJA_TEMPLATE_REGISTRY_NAME, env=None):
+        """
+        By default, the engine can be created without arguments which
+        will initialize using the default registry.
+
+        It is possible to initialize using other arguments, but this is
+        unsupported by the main system, and only useful for certain
+        specialized implementations.
+        """
+
+        self.registry = (
+            registry
+            if isinstance(registry, JinjaTemplateRegistry) else get(registry)
+        )
+        self.env = env if env else Environment(
+            autoescape=True,
+            loader=NunjaLoader(self.registry)
+        )
+        # this filter is to match with nunjucks version (which calls
+        # JSON.stringify in JavaScript); construct a partial which is a
+        # callable to json.dumps with default parameters that mimic the
+        # JavaScript version of the called function.
+        self.env.filters['dump'] = partial(
+            json.dumps, sort_keys=True, separators=(',', ':'))
+
+    def lookup_path(self, name):
+        """
+        Lookup the path of the underlying resource identified by name
+        through the loader.
+        """
+
+        return self.registry.verify_path(name)
+
+    def fetch_path(self, name):
+        """
+        Fetch contents from the path retrieved via lookup_path.
+
+        No caching will be done.
+        """
+
+        with codecs.open(self.lookup_path(name), encoding='utf-8') as fd:
+            return fd.read()
+
+    def load_template(self, name):
+        """
+        Load the template identified by name as found in the registry.
+        """
+
+        return self.env.get_template(name)
+
+    def render_template(self, name, data):
+        """
+        Render a template.
+        """
+
+        template = self.load_template(name)
         return template.render(**data)

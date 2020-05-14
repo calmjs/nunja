@@ -57,7 +57,7 @@ def setup_tmp_module(testcase_inst, modname='tmp'):
     sys.modules[modname] = ModuleType(modname)
 
 
-def setup_tmp_mold_templates(testcase_inst):
+def setup_tmp_mold_templates(testcase_inst, namespace='tmp'):
     """
     Set up a temporary module, with a default mold and templates.
 
@@ -71,6 +71,8 @@ def setup_tmp_mold_templates(testcase_inst):
         ('entry_points.txt', '\n'.join([
             '[nunja.mold]',
             'tmp = tmp:root',
+            '[nunja.tmpl]',
+            'templates = tmp:root',
         ])),
     ), 'nunjatesting', '0.0')
 
@@ -83,6 +85,7 @@ def setup_tmp_mold_templates(testcase_inst):
 
     module_map = {
         'tmp': tempdir,
+        'templates': tempdir,
         'nunjatesting': tempdir,
         # include this module, too
         'nunja': resource_filename(Requirement.parse('nunja'), ''),
@@ -109,7 +112,7 @@ def setup_tmp_mold_templates(testcase_inst):
     filter_dump_template = join(molddir, 'filter_dump.nja')
 
     with open(main_template, 'w') as fd:
-        fd.write('<div>{% include "tmp/mold/sub.nja" %}</div>')
+        fd.write('<div>{%% include "%s/mold/sub.nja" %%}</div>' % namespace)
 
     with open(sub_template, 'w') as fd:
         fd.write('<span>{{ data }}</span>')
@@ -135,6 +138,17 @@ def setup_tmp_mold_templates_registry(testcase_inst):
         sub_template) = setup_tmp_mold_templates(testcase_inst)
 
     registry = MoldRegistry('nunja.mold', _working_set=working_set)
+    return registry, main_template, sub_template
+
+
+def setup_tmp_jinja_templates_registry(testcase_inst):
+    from nunja.registry import JinjaTemplateRegistry
+
+    (working_set, main_template,
+        sub_template) = setup_tmp_mold_templates(
+            testcase_inst, namespace='templates')
+
+    registry = JinjaTemplateRegistry('nunja.tmpl', _working_set=working_set)
     return registry, main_template, sub_template
 
 
