@@ -8,8 +8,8 @@ provided by a given module or a directory, the proper entry points must
 be declared in its package.  For example::
 
     [nunja.mold]
-    example.namespace.module = example.namespace:module
-    nunja.testmold = nunja.testing:mold
+    example.namespace.molds = example.namespace:molds
+    nunja.testmolds = nunja.testing:molds
 
 In both examples, the ``module_name`` of the defined entry point will be
 imported to resolve the associated directory for which this module was
@@ -28,6 +28,14 @@ within their namespace, so for the case of ``nunja.testmold`` it really
 should be defined as ``nunja.testing.mold``.  Also, packages should not
 declare molds defined other package namespaces under this default
 ``nunja.mold`` registry.
+
+An alternative registry that provide just the templates is also provided
+to better distinguish server-side only templates where this situation
+applies::
+
+    [nunja.tmpl]
+    example.namespace.tmpl = example.namespace:tmpl
+    nunja.tmpl = nunja:tmpl
 """
 
 from errno import ENOENT
@@ -50,6 +58,7 @@ TMPL_FN_EXT = '.nja'
 REQ_TMPL_NAME = 'template' + TMPL_FN_EXT
 ENTRY_POINT_NAME = 'nunja.mold'
 DEFAULT_REGISTRY_NAME = ENTRY_POINT_NAME
+JINJA_TEMPLATE_REGISTRY_NAME = 'nunja.tmpl'
 DEFAULT_WRAPPER_NAME = '_core_/_default_wrapper_'
 
 logger = getLogger(__name__)
@@ -76,7 +85,30 @@ def _remap(locals_, type_, mold_id, related):
             break
 
 
-class MoldRegistry(BaseModuleRegistry):
+class NunjaModuleRegistry(BaseModuleRegistry):
+    """
+    The common module registry for the different forms of module
+    template export registry for nunja.
+    """
+
+    def register_entry_point(self, entry_point):
+        if len(entry_point.attrs) != 1:
+            logger.warning(
+                "entry_point '%s' from package '%s' incompatible with "
+                "registry '%s'; a target dir must be provided after the "
+                "module.",
+                entry_point, entry_point.dist, self.registry_name,
+            )
+            return
+
+        if self.auto_reload:
+            self.tracked_entry_points[entry_point.name] = entry_point
+
+        return super(NunjaModuleRegistry, self).register_entry_point(
+            entry_point)
+
+
+class MoldRegistry(NunjaModuleRegistry):
     """
     Default registry implementation.
     """
@@ -125,8 +157,9 @@ class MoldRegistry(BaseModuleRegistry):
 
         logger.info(
             "entry_point '%s' from package '%s' provided "
-            "%d templates and %d scripts.",
+            "%d templates and %d scripts to registry '%s'",
             entry_point, entry_point.dist, len(template_map), len(script_map),
+            self.registry_name,
         )
 
         return template_map, script_map
@@ -146,21 +179,6 @@ class MoldRegistry(BaseModuleRegistry):
                 mold_id = key[len(self.text_prefix):-len(name) - 1]
                 molds[mold_id] = template_map[key][:-len(name) - 1]
                 yield mold_id
-
-    def register_entry_point(self, entry_point):
-        if len(entry_point.attrs) != 1:
-            logger.warning(
-                "entry_point '%s' from package '%s' incompatible with "
-                "registry '%s'; a target dir must be provided after the "
-                "module.",
-                entry_point, entry_point.dist, self.registry_name,
-            )
-            return
-
-        if self.auto_reload:
-            self.tracked_entry_points[entry_point.name] = entry_point
-
-        return super(MoldRegistry, self).register_entry_point(entry_point)
 
     def _map_entry_point_module(self, entry_point, module):
         template_map, script_map = self._generate_maps(entry_point, module)
@@ -191,8 +209,10 @@ class MoldRegistry(BaseModuleRegistry):
         self.molds.update(molds)
 
         logger.info(
-            "entry point '%s' from module '%s' generated %d molds",
-            entry_point, module.__name__, len(molds)
+            "entry point '%s' from module '%s' generated %d molds "
+            "for registry '%s'",
+            entry_point, module.__name__, len(molds),
+            self.registry_name,
         )
 
         return result
@@ -256,6 +276,76 @@ class MoldRegistry(BaseModuleRegistry):
 
         return join(path, *subpath)
         # TODO Should a lookup_template be implemented?
+
+    def verify_path(self, mold_id_path):
+        """
+        Lookup and verify path.
+        """
+
+        try:
+            path = self.lookup_path(mold_id_path)
+            if not exists(path):
+                raise KeyError
+        except KeyError:
+            raise_os_error(ENOENT)
+        return path
+
+
+class JinjaTemplateRegistry(NunjaModuleRegistry):
+    """
+    Jinja only registry
+
+    While organization of the structure to be indexed is similar to the
+    molds as above, this registry only tracks Jinja2 templates, and will
+    NOT export any module names or names of any kind out through the
+    calmjs framework, to prevent inclusion of raw template files into
+    the root export list for JavaScript bundlers.
+    """
+
+    def _init(self, fext=TMPL_FN_EXT, auto_reload=False, *a, **kw):
+        self.templates = {}
+        self.tracked_entry_points = {}
+        self.fext = fext
+        self.auto_reload = auto_reload
+
+    @classmethod
+    def create(cls, registry_name=JINJA_TEMPLATE_REGISTRY_NAME, *a, **kw):
+        return cls(registry_name=registry_name, *a, **kw)
+
+    def _map_entry_point_module(self, entry_point, module):
+        (modname_nunja_template, modname_nunja_script,
+            modpath_pkg_resources_entry_point) = generate_modname_nunja(
+                entry_point, module, fext=self.fext, text_prefix='')
+
+        # Track local templates manually.
+        self.templates.update(mapper(
+            module, entry_point=entry_point,
+            modpath=modpath_pkg_resources_entry_point,
+            globber='recursive', modname=modname_nunja_template,
+            fext=self.fext,
+        ))
+
+        logger.info(
+            "entry_point '%s' from package '%s' provided %d templates "
+            "to registry '%s'",
+            entry_point, entry_point.dist, len(self.templates),
+            self.registry_name,
+        )
+        # Explicitly export nothing for this repository.
+        return {}
+
+    def lookup_path(self, mold_id_path, default=_marker):
+        """
+        For the given mold_id_path, look up the mold_id and translate
+        that path to its filesystem equivalent.
+        """
+
+        try:
+            return self.templates[mold_id_path]
+        except KeyError:
+            if default is _marker:
+                raise
+            return default
 
     def verify_path(self, mold_id_path):
         """

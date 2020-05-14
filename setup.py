@@ -75,6 +75,8 @@ setup(
     },
     entry_points={
         'calmjs.registry': [
+            # The template only registry.
+            'nunja.tmpl = nunja.registry:JinjaTemplateRegistry',
             # The main mold registry.
             'nunja.mold = nunja.registry:MoldRegistry',
             # The registry for the tests written originally that are
@@ -100,6 +102,9 @@ setup(
         'nunja.mold': [
             '_core_ = nunja:_core_',
             'nunja.molds = nunja:molds',
+        ],
+        'nunja.tmpl': [
+            'nunja.tmpl = nunja:molds',
         ],
         'nunja.mold.testing': [
             'nunja.testing.mold = nunja.testing:mold',

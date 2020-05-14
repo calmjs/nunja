@@ -12,7 +12,9 @@ import calmjs.registry
 
 from nunja.registry import _remap
 from nunja.registry import MoldRegistry
+from nunja.registry import JinjaTemplateRegistry
 from nunja.registry import DEFAULT_REGISTRY_NAME
+from nunja.registry import JINJA_TEMPLATE_REGISTRY_NAME
 
 from calmjs.testing import mocks
 from calmjs.testing.utils import mkdtemp_singleton
@@ -175,7 +177,7 @@ class MoldRegistryTestCase(unittest.TestCase):
     def test_no_valid_file(self):
         working_set = mocks.WorkingSet({
             'nunja.mold': [
-                'nunja.testing.badmold = nunja.testing:badmolds',
+                'nunja.testing.badmold = nunja.testing:badmold',
             ]},
             dist=Distribution(project_name='nunjatesting', version='0.0')
         )
@@ -184,11 +186,13 @@ class MoldRegistryTestCase(unittest.TestCase):
             registry = MoldRegistry('nunja.mold', _working_set=working_set)
 
         records = registry.get_records_for_package('nunjatesting')
-        keys = []
 
-        self.assertEqual(sorted(records.keys()), keys)
+        self.assertEqual(
+            sorted(records.keys()),
+            ['text!nunja.testing.badmold/nomold/empty.nja'],
+        )
 
-        self.assertIn('0 templates', stream.getvalue())
+        self.assertIn('1 templates', stream.getvalue())
         self.assertIn('0 scripts', stream.getvalue())
         self.assertIn('generated 0 molds', stream.getvalue())
 
@@ -362,3 +366,156 @@ class MoldRegistryTestCase(unittest.TestCase):
 
         self.assertEqual(
             registry.verify_path('tmp/new_mold/template.nja'), new_tmpl)
+
+
+class JinjaTemplateRegistryTestCase(unittest.TestCase):
+
+    def test_registered_to_root_registry(self):
+        registry = calmjs.registry.get('nunja.tmpl')
+        self.assertTrue(isinstance(registry, JinjaTemplateRegistry))
+        self.assertIs(
+            registry, calmjs.registry.get(JINJA_TEMPLATE_REGISTRY_NAME))
+
+    def test_registry_load_working_set(self):
+        # do note these mocking sets are for the registry; actual
+        # filenames is not overridden (uses pkg_resources directly)
+        working_set = mocks.WorkingSet({
+            'nunja.tmpl': [
+                'nunja.testing.templates = nunja.testing:mold',
+            ]},
+            dist=Distribution(project_name='nunjatesting', version='0.0')
+        )
+
+        with pretty_logging(logger='nunja', stream=mocks.StringIO()) as stream:
+            registry = JinjaTemplateRegistry(
+                'nunja.tmpl', _working_set=working_set)
+
+        self.assertIn('7 templates', stream.getvalue())
+        self.assertNotIn('scripts', stream.getvalue())
+
+        # to prevent the export of names into the calmjs toolchain, the
+        # standard record retrieval provides nothing.
+        self.assertEqual({}, registry.get_records_for_package('nunjatesting'))
+        self.assertEqual(
+            registry.get_record('nunja.testing.templates/basic'), {})
+
+        # records are available via an alternative method.
+        self.assertEqual([
+            'nunja.testing.templates/basic/template.nja',
+            'nunja.testing.templates/include_by_name/empty.nja',
+            'nunja.testing.templates/include_by_name/template.nja',
+            'nunja.testing.templates/include_by_value/template.nja',
+            'nunja.testing.templates/itemlist/template.nja',
+            'nunja.testing.templates/noinit/template.nja',
+            'nunja.testing.templates/problem/template.nja',
+        ], sorted(registry.templates.keys()))
+
+    def test_incompat_with_molds(self):
+        # molds will fail on this.
+        working_set = mocks.WorkingSet({
+            'nunja.tmpl': [
+                'nunja.testing.templates = nunja.testing:badmold',
+            ]},
+            dist=Distribution(project_name='nunjatesting', version='0.0')
+        )
+
+        with pretty_logging(logger='nunja', stream=mocks.StringIO()) as stream:
+            registry = JinjaTemplateRegistry(
+                'nunja.tmpl', _working_set=working_set)
+
+        self.assertIn('1 templates', stream.getvalue())
+        self.assertEqual(
+            sorted(registry.templates.keys()),
+            ['nunja.testing.templates/nomold/empty.nja'],
+        )
+
+    def mk_test_registry(self, entry_points=None):
+        if entry_points is None:
+            entry_points = ['nunja.testing.templates = nunja.testing:mold']
+
+        working_set = mocks.WorkingSet(
+            {'nunja.tmpl': entry_points},
+            dist=Distribution(project_name='nunjatesting', version='0.0')
+        )
+        return JinjaTemplateRegistry.create(_working_set=working_set)
+
+    def test_registry_mold_id_to_path_registered_entry_point(self):
+        registry = self.mk_test_registry()
+        # Test that the lookup works.
+        path = registry.lookup_path(
+            'nunja.testing.templates/basic/template.nja')
+        with open(join(path), 'r') as fd:
+            contents = fd.read()
+        self.assertEqual(contents, basic_tmpl_str)
+
+    def test_registry_mold_id_to_path_unregistered(self):
+        registry = self.mk_test_registry([])
+        with self.assertRaises(KeyError):
+            registry.lookup_path(
+                'nunja.testing.templates/basic/template.nja')
+
+    def test_registry_lookup_path_registered_not_found(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+
+        with self.assertRaises(KeyError):
+            registry.lookup_path('ntm/template/nosuchpath.nja')
+
+        with self.assertRaises(KeyError):
+            registry.lookup_path('nothing_here')
+
+    def test_registry_lookup_path_default(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+        result = registry.lookup_path('ntm/nomold/nosuchpath.nja', '<default>')
+        self.assertEqual(result, '<default>')
+
+    def test_registry_verify_path_registered(self):
+        registry = self.mk_test_registry()
+        path = registry.verify_path(
+            'nunja.testing.templates/itemlist/template.nja')
+        with open(path, 'r') as fd:
+            contents = fd.readline()
+        self.assertEqual(
+            contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
+
+        # fake a registration
+        registry.templates['ntm/faketemplate/nosuchpath.nja'] = 'nowhere_path'
+        with self.assertRaises(OSError):
+            registry.verify_path('ntm/faketemplate/nosuchpath.nja')
+
+    def test_registry_verify_path_unregistered(self):
+        registry = self.mk_test_registry(['ntm = nunja.testing:mold'])
+        with self.assertRaises(OSError):
+            registry.verify_path('ntm/itemlist/nosuchpath.nja')
+
+    def test_registry_verify_traversal(self):
+        registry = self.mk_test_registry()
+        path = registry.verify_path(
+            'nunja.testing.templates/itemlist/template.nja')
+        with open(path, 'r') as fd:
+            contents = fd.readline()
+        self.assertEqual(
+            contents, '<ul{%- if list_id %} id="{{ list_id }}"{% endif -%}>\n')
+
+    def test_registry_autoreload_base_support(self):
+        # This is just to test the setup of the relevant entry correctly
+        # but does not actually deal with the more dynamic functionality
+        # that molds offer.
+        setup_tmp_module(self)
+
+        entry_points = ['tmp = tmp:mold']
+
+        working_set = mocks.WorkingSet(
+            {'nunja.tmpl': entry_points},
+            dist=Distribution(project_name='nunjatesting', version='0.0')
+        )
+
+        registry = JinjaTemplateRegistry.create(
+            _working_set=working_set, auto_reload=False)
+        self.assertFalse(registry.tracked_entry_points)
+        with self.assertRaises(KeyError):
+            registry.lookup_path('tmp/itemlist')
+
+        registry = JinjaTemplateRegistry.create(
+            _working_set=working_set, auto_reload=True)
+        self.assertEqual(
+            str(registry.tracked_entry_points['tmp']), entry_points[0])
