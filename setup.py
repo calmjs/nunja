@@ -104,7 +104,7 @@ setup(
             'nunja.molds = nunja:molds',
         ],
         'nunja.tmpl': [
-            'nunja.tmpl = nunja:molds',
+            'nunja.tmpl = nunja:templates',
         ],
         'nunja.mold.testing': [
             'nunja.testing.mold = nunja.testing:mold',

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block __nunja_title__ %}{{ __nunja_title__ }}{% endblock %}</title>
+{% block __nunja_head_javascript__ %}
+{% for src in js_src -%}
+  <script type="text/javascript" src="{{ __nunja_js_prefix__ }}{{ src }}"></script>
+{% endfor %}
+{% endblock %}
+{% block __nunja_head_stylesheet__ %}
+{% for src in css_src -%}
+  <link type="text/css" href="{{ __nunja_css_prefix__ }}{{ src }}" rel="stylesheet" />
+{%- endfor %}
+{% endblock %}
+</head>
+<body>
+{% block __nunja_body__ %}{{ body|safe }}{% endblock %}
+</body>
+{% block __nunja_foot_javascript__ %}
+{% endblock %}
+</html>
