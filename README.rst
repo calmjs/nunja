@@ -75,6 +75,25 @@ Guidelines will be added as the system is formalized, and they follow:
   require.js, and so the option to build packages as AMD modules is
   permitted, though the standard CommonJS structure should work.
 
+Shared templates
+~~~~~~~~~~~~~~~~
+
+These are exposed through the ``nunja.molds`` registry as a complete
+set that includes client side scripts.
+
+Server-side only templates
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These are exposed through the ``nunja.tmpl`` registry, and is intended
+for templates that generate the skeletal markup from which the molds may
+be nested.
+
+A more formal set of keywords may be developed in the future to better
+facilitate the above process.
+
+Currently, declaring templates under this registry will be useful for
+providing static templates across Python package boundaries.
+
 
 Deployment
 ----------
