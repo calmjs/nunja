@@ -6,9 +6,10 @@ matrix:
   include:
     - language: python
       python: 2.7
+      dist: trusty
       env:
         - TRAVIS_NODE_VERSION=8
-        - BROWSER=PhantomJS
+        - BROWSER=Firefox
     - language: python
       dist: trusty
       python: 3.4
@@ -32,7 +33,7 @@ matrix:
       python: 3.7
       dist: xenial
       env:
-        - TRAVIS_NODE_VERSION=12
+        - TRAVIS_NODE_VERSION=10
         - BROWSER=PhantomJS
     - language: python
       python: 3.8
@@ -47,15 +48,15 @@ matrix:
       dist: xenial
       env:
         - TRAVIS_NODE_VERSION=14
-        - BROWSER=PhantomJS
+        - BROWSER=Chrome
       addons:
         chrome: stable
     - language: python
-      dist: trusty
+      dist: xenial
       python: pypy
       env:
         - TRAVIS_NODE_VERSION=8
-        - BROWSER=Firefox
+        - BROWSER=PhantomJS
     - language: python
       python: pypy3
       env:
