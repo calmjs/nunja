@@ -187,4 +187,5 @@ branches:
   only:
     - testing
     - master
+    - 0.1.x
     - 1.0.x
