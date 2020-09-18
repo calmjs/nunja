@@ -4,12 +4,12 @@ nunja
 A minimum framework for building reuseable templates for consumption by
 Python backends and JavaScript frontends.
 
-.. image:: https://travis-ci.org/calmjs/nunja.svg?branch=0.1.x
+.. image:: https://travis-ci.org/calmjs/nunja.svg?branch=0.1.0
     :target: https://travis-ci.org/calmjs/nunja
-.. image:: https://ci.appveyor.com/api/projects/status/mfg7t8y4anh5futf/branch/0.1.x?svg=true
-    :target: https://ci.appveyor.com/project/metatoaster/nunja/branch/0.1.x
-.. image:: https://coveralls.io/repos/github/calmjs/nunja/badge.svg?branch=0.1.x
-    :target: https://coveralls.io/github/calmjs/nunja?branch=0.1.x
+.. image:: https://ci.appveyor.com/api/projects/status/mfg7t8y4anh5futf/branch/0.1.0?svg=true
+    :target: https://ci.appveyor.com/project/metatoaster/nunja/branch/0.1.0
+.. image:: https://coveralls.io/repos/github/calmjs/nunja/badge.svg?branch=0.1.0
+    :target: https://coveralls.io/github/calmjs/nunja?branch=0.1.0
 
 Features
 --------
